@@ -2,6 +2,9 @@ import Ajv from "ajv";
 
 export type ValidationResult = 'VALID' | 'SCHEMA_NOT_FOUND' | 'SCHEMA_INVALID' | 'SCHEMA_COMPILE_ERROR' | 'INVALID' | 'ERROR_PARSING_SCHEMA' |
                             'FILE_NOT_FOUND' | 'FILE_PARSE_ERROR' | 'VALIDATION_ERROR';
+export interface dataObjectWithVersion {
+    version: string
+}
 export const ValidationErrors = ['INVALID', 'FILE_NOT_FOUND', 'FILE_PARSE_ERROR', 'VALIDATION_ERROR'];
 
 export abstract class ValidationFactory {
@@ -37,6 +40,7 @@ export abstract class ValidationFactory {
         }
 
         if (myReturn === 'VALID') {
+            if (!schemaVersion) schemaVersion = (dataObject as dataObjectWithVersion).version;
             const schemaKey = `${schemaId}@${schemaVersion}`;
             let compiledSchema;
             if (ValidationFactory.compiledSchemas[schemaKey]) {

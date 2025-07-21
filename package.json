@@ -4,7 +4,7 @@
   "license": "MIT",
   "description": "Script to validate json data based on a json schema published in iqb-specifications",
   "scripts": {
-    "test_validation": "ts-node src/validate-json.ts",
+    "test_validation": "ts-node src/validate-json.ts test/nemo nemo-player-unit-definition",
     "prepare_publish": "rm -rf dist/* && tsc && cp ./package_npm.json ./dist/package.json && cp ./README.md ./dist",
     "npm_publish": "cd dist && npm publish --access public"
   },

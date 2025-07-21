@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { ValidationFactory, ValidationErrors } from "./validation.factory";
 
-const schemaId = 'response';
-const schemaVersion = '1.4';
-const dataFolder = './test';
+const dataFolder = process.argv[2];
+const schemaId = process.argv[3];
+const schemaVersion = process.argv[4];
 
 const fs = require('fs');
 let countValid = 0;
@@ -32,6 +32,7 @@ async function evaluateFolder(folderName: string) {
 
 if (fs.existsSync(dataFolder)) {
     evaluateFolder(dataFolder).then(()=> {
+        console.error(`\nvalidation complete`);
         if (countErrors > 0) {
             console.error(`\x1b[0;31m${countErrors} errors\x1b[0m`);
             process.exitCode = 1;
