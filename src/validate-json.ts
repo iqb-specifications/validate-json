@@ -11,7 +11,8 @@ let countErrors = 0;
 let countWarnings = 0;
 
 async function evaluateFolder(folderName: string) {
-    return await fs.readdirSync(folderName).forEach(async (file: string) => {
+    const allFiles = await fs.readdirSync(folderName);
+    for (const file of allFiles) {
         const validationResult = await ValidationFactory.validate(`${folderName}/${file}`, schemaId, schemaVersion);
         if (validationResult === 'VALID') {
             console.error(`${file}: \x1b[0;32m${validationResult}\x1b[0m`);
@@ -26,12 +27,11 @@ async function evaluateFolder(folderName: string) {
             }
             console.log(ValidationFactory.lastErrorMessage);
         }
-    });
+    }
 }
 
 if (fs.existsSync(dataFolder)) {
     evaluateFolder(dataFolder).then(()=> {
-        console.log('###');
         if (countErrors > 0) {
             console.error(`\x1b[0;31m${countErrors} errors\x1b[0m`);
             process.exitCode = 1;
