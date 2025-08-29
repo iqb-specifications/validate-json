@@ -1,0 +1,28 @@
+{
+  "$id": "stars-unit-definition@0.16",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stars Player Unit Definition",
+  "description": "Specification for the unit definition of the stars player.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "const": "stars-unit-definition",
+      "description": "Ensures that this is the right definition type"
+    },
+    "version": {
+      "type": "string",
+      "default": "0.11",
+      "description": "Version to better support legacy definitions."
+    },
+    "backgroundColor": {
+      "type": "string",
+      "description": "web-color",
+      "examples": [
+        "#ffaa56",
+        "#ff1"
+      ],
+      "default": "#eeeeee"
+    }
+  },
+  "required": ["id", "version", "backgroundColor"]
+}

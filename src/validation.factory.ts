@@ -12,6 +12,35 @@ export abstract class ValidationFactory {
     private static invalidSchemas: Record<string, ValidationResult> = {};
     private static compiledSchemas: Record<string, any> = {};
 
+    public static addLocalSchema(schemaFilename: string, schemaId: string, schemaVersion: string): ValidationResult {
+        let myReturn: ValidationResult = 'VALID';
+        const fs = require('fs');
+        if (fs.existsSync(schemaFilename)) {
+            let compiledSchema = null;
+            let fileContent;
+            try {
+                fileContent = fs.readFileSync(schemaFilename, 'utf8');
+            } catch (err) {
+                ValidationFactory.lastErrorMessage = err;
+                fileContent = null;
+            }
+            if (fileContent) {
+                const ajv = new Ajv();
+                try {
+                    const dataObject = JSON.parse(fileContent);
+                    compiledSchema = ajv.compile(dataObject);
+                    ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
+                } catch (err) {
+                    myReturn = 'SCHEMA_COMPILE_ERROR';
+                    ValidationFactory.lastErrorMessage = err;
+                }
+            }
+        } else {
+            myReturn = 'SCHEMA_NOT_FOUND'
+        }
+        return myReturn;
+    }
+
     public static async validate(sourceFilename: string, schemaId: string, schemaVersion: string): Promise<ValidationResult> {
         let myReturn: ValidationResult = 'VALID';
         ValidationFactory.lastErrorMessage = '';

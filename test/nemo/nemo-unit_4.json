@@ -1,9 +1,9 @@
 {
-    "id": "nemo-player-unit-definition",
-    "version": "0.5",
-    "interactionType": "BUTTONS",
-    "mainAudio": {
-        "audioSource": "bla bla",
-        "maxPlay": 8
-    }
+  "id": "stars-unit-definition",
+  "version": "0.16",
+  "interactionType": "BUTTONS",
+  "mainAudio": {
+      "audioSource": "bla bla",
+      "maxPlay": 8
+  }
 }

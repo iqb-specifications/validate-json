@@ -11,7 +11,7 @@ let countErrors = 0;
 let countWarnings = 0;
 
 async function evaluateFolder(folderName: string) {
-    const allFiles = await fs.readdirSync(folderName);
+    const allFiles = fs.readdirSync(folderName);
     for (const file of allFiles) {
         const validationResult = await ValidationFactory.validate(`${folderName}/${file}`, schemaId, schemaVersion);
         if (validationResult === 'VALID') {

@@ -33,3 +33,13 @@ Parameters:
 1. **Folder** containing of the files. Recursive validation of subfolders is not supported (yet).
 2. **ID** of the schema
 3. (optional) **Version** <major>.<minor>; if not specified, the script expects the version to be a property `version` of the data file
+
+# Experimental extension v0.2
+
+Use another script to validate a local schema with test files:
+
+```json
+    "scripts": {
+      "check-schema": "test-schema test-data-folder schema-file"
+    },
+```

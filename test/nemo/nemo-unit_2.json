@@ -1,17 +1,17 @@
 {
-    "id": "nemo-player-unit-definition",
-    "version": "0.5",
-    "interactionType": "BUTTONS",
-    "interactionParameters": {
-        "size": "SMALL",
-        "gap": "BIG",
-        "options": [
-            {
-                "text": "yoyo"
-            },
-            {
-                "icon": "CLOSE_RED"
-            }
-        ]
-    }
+  "id": "stars-unit-definition",
+  "version": "0.16",
+  "interactionType": "BUTTONS",
+  "interactionParameters": {
+      "size": "SMALL",
+      "gap": "BIG",
+      "options": [
+          {
+              "text": "yoyo"
+          },
+          {
+              "icon": "CLOSE_RED"
+          }
+      ]
+  }
 }

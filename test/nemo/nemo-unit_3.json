@@ -1,5 +1,5 @@
 {
-    "id": "nemo-player-unit-definition",
-    "version": "0.5",
-    "interactionType": "BUTTONS"
+  "id": "stars-unit-definition",
+  "version": "0.16",
+  "interactionType": "IMAGE_ONLY"
 }
