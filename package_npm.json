@@ -1,6 +1,6 @@
 {
   "name": "@iqbspecs/validate-json",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "IQB - Institut zur Qualitätsentwicklung im Bildungswesen",
   "license": "MIT",
   "description": "Script to validate json data based on a json schema published in iqb-specifications",

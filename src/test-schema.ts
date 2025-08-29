@@ -31,9 +31,9 @@ async function evaluateFolder(folderName: string) {
     }
 }
 
-if (!dataFolder) dataFolder = '/test';
+if (!dataFolder) dataFolder = './test';
 if (!schemaFileName) {
-    const allRootFiles = fs.readdirSync('/');
+    const allRootFiles = fs.readdirSync('.');
     if (Array.isArray(allRootFiles) && allRootFiles.length > 0) {
         schemaFileName = allRootFiles.find(fileName => {
             if (!fileName || fileName.length < 13) return false;
@@ -41,7 +41,6 @@ if (!schemaFileName) {
         });
     }
 }
-console.error(dataFolder, schemaFileName);
 
 if (fs.existsSync(dataFolder) && fs.existsSync(schemaFileName)) {
     const addSchemaResult = ValidationFactory.addLocalSchema(schemaFileName, schemaId, schemaVersion);
@@ -65,6 +64,6 @@ if (fs.existsSync(dataFolder) && fs.existsSync(schemaFileName)) {
         console.log(ValidationFactory.lastErrorMessage);
     }
 } else {
-    console.log(`\x1b[0;31mERROR\x1b[0m '${dataFolder}' not found`);
+    console.log(`\x1b[0;31mERROR\x1b[0m data folder '${dataFolder}' or schema file '${schemaFileName}' not found`);
     process.exitCode = 1;
 }
