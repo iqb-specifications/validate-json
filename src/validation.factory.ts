@@ -9,15 +9,8 @@ export interface dataObjectWithVersion {
 }
 export const ValidationErrors = ['INVALID', 'FILE_NOT_FOUND', 'FILE_PARSE_ERROR', 'VALIDATION_ERROR'];
 
-export function findExternalUri(schemaFilename: string) {
+export function findExternalUri(schemaFilename: string):string {
     let myReturn: ValidationResult = 'VALID';
-    let fileContent: string;
-    try {
-        fileContent = fs.readFileSync(schemaFilename, 'utf-8');
-    } catch (err) {
-        console.error('❌ Failed to read file:', err);
-        process.exit(1);
-    }
 
     /**
      * Regular expression to match: "$ref": "http...until next quote
@@ -30,7 +23,8 @@ export function findExternalUri(schemaFilename: string) {
     const refMap = new Map<string, Response>();
 
     let counter = 1;
-    const replacedContent = fileContent.replace(refRegex, (match) => {
+    // @ts-ignore
+    const replacedContent = schemaFilename.replace(refRegex, async (match) => {
         const urlMatch = match.match(/"http[^"]*"/);
         if (!urlMatch) return match;
 
@@ -39,27 +33,26 @@ export function findExternalUri(schemaFilename: string) {
         // If we've seen this $ref before, reuse the same replacement
         if (refMap.has(originalUrl)) {
             const replacement = refMap.get(originalUrl)!;
-            return `"${replacement}"`;
-        }
-
-        // Create a unique replacement string
-        // const replacement = `$ref": "REPLACED_REF_${counter++}`;
-        const replacement = fetchRefs(originalUrl);
-        if (replacement !== null) {
-            // refMap.set(originalUrl, replacement);
-            console.log('Estoy aqui');
-            console.log(replacement);
         } else {
-            myReturn = 'SCHEMA_NOT_FOUND';
+            // Create a unique replacement string
+            // const replacement = `$ref": "REPLACED_REF_${counter++}`;
+            const replacement = await fetchRefs(originalUrl);
+            if (replacement !== null) {
+                // @ts-ignore
+                refMap.set(originalUrl, replacement);
+            } else {
+                myReturn = 'SCHEMA_NOT_FOUND';
+            }
         }
-        return `"${replacement}"`;
     });
-
+    // console.log(`TODO ES ${replacedContent}`)
+    return replacedContent;
 }
 
 // @ts-ignore
-export async function fetchRefs(originalUrl: string):Promise<Response | null>{
-
+export async function fetchRefs(originalUrl: string): Promise<string>{
+    originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
+    // originalUrl = 'https://raw.githubusercontent.com/iqb-specifications/metadata-values/refs/heads/main/metadata-values.schema.json';
     let fetchResponse: Response | null = null;
     let schemaFileContent = {};
     try {
@@ -76,15 +69,12 @@ export async function fetchRefs(originalUrl: string):Promise<Response | null>{
             schemaFileContent = '';
         }
         if (schemaFileContent) {
-            return fetchResponse;
+            console.log(JSON.stringify(schemaFileContent));
+            return JSON.stringify(schemaFileContent);
         }
     }else {
-        return null;
+        return "";
     }
-}
-
-export function replaceRefs(){
-
 }
 
 export abstract class ValidationFactory {
@@ -105,6 +95,8 @@ export abstract class ValidationFactory {
                 fileContent = null;
             }
             if (fileContent) {
+               // console.log(`HOLA mi tipo es ${(fileContent)}`);
+                findExternalUri(fileContent.toString());
                 const ajv = new Ajv();
                 try {
                     const dataObject = JSON.parse(fileContent);
@@ -136,6 +128,7 @@ export abstract class ValidationFactory {
                 ValidationFactory.lastErrorMessage = err;
                 fileContent = null;
             }
+
             if (fileContent) {
                 try {
                     dataObject = JSON.parse(fileContent);
@@ -162,6 +155,7 @@ export abstract class ValidationFactory {
                 let schemaFileContent = {};
                 try {
                     fetchResponse = await fetch(schemaUrl);
+                    console.log(`1 ${fetchResponse}`)
                 } catch (err) {
                     ValidationFactory.lastErrorMessage = err;
                     fetchResponse = null;
@@ -170,13 +164,15 @@ export abstract class ValidationFactory {
                 if (fetchResponse) {
                     try {
                         schemaFileContent = await fetchResponse.json();
+                        console.log(`111111111 ${JSON.stringify(schemaFileContent)}`)
                     } catch (err) {
                         ValidationFactory.lastErrorMessage = err;
                         schemaFileContent = '';
                         myReturn = 'SCHEMA_INVALID'
                     }
                     if (schemaFileContent) {
-                        findExternalUri(schemaFileContent.toString());
+                        schemaFileContent = findExternalUri(schemaFileContent.toString());
+                        console.log(`Paso por aqui ${schemaFileContent}` );
                         const ajv = new Ajv();
                         try {
                             compiledSchema = ajv.compile(schemaFileContent);
