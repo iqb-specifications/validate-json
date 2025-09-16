@@ -1,4 +1,6 @@
 import Ajv from "ajv";
+import * as fs from 'fs';
+import * as path from 'path';
 
 export type ValidationResult = 'VALID' | 'SCHEMA_NOT_FOUND' | 'SCHEMA_INVALID' | 'SCHEMA_COMPILE_ERROR' | 'INVALID' | 'ERROR_PARSING_SCHEMA' |
                             'FILE_NOT_FOUND' | 'FILE_PARSE_ERROR' | 'VALIDATION_ERROR';
@@ -6,6 +8,84 @@ export interface dataObjectWithVersion {
     version: string
 }
 export const ValidationErrors = ['INVALID', 'FILE_NOT_FOUND', 'FILE_PARSE_ERROR', 'VALIDATION_ERROR'];
+
+export function findExternalUri(schemaFilename: string) {
+    let myReturn: ValidationResult = 'VALID';
+    let fileContent: string;
+    try {
+        fileContent = fs.readFileSync(schemaFilename, 'utf-8');
+    } catch (err) {
+        console.error('❌ Failed to read file:', err);
+        process.exit(1);
+    }
+
+    /**
+     * Regular expression to match: "$ref": "http...until next quote
+     */
+    const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
+
+    /**
+     * Store mapping of original $ref → replacement
+     */
+    const refMap = new Map<string, Response>();
+
+    let counter = 1;
+    const replacedContent = fileContent.replace(refRegex, (match) => {
+        const urlMatch = match.match(/"http[^"]*"/);
+        if (!urlMatch) return match;
+
+        const originalUrl = urlMatch[0].slice(1, -1); // Remove surrounding quotes
+
+        // If we've seen this $ref before, reuse the same replacement
+        if (refMap.has(originalUrl)) {
+            const replacement = refMap.get(originalUrl)!;
+            return `"${replacement}"`;
+        }
+
+        // Create a unique replacement string
+        // const replacement = `$ref": "REPLACED_REF_${counter++}`;
+        const replacement = fetchRefs(originalUrl);
+        if (replacement !== null) {
+            // refMap.set(originalUrl, replacement);
+            console.log('Estoy aqui');
+            console.log(replacement);
+        } else {
+            myReturn = 'SCHEMA_NOT_FOUND';
+        }
+        return `"${replacement}"`;
+    });
+
+}
+
+// @ts-ignore
+export async function fetchRefs(originalUrl: string):Promise<Response | null>{
+
+    let fetchResponse: Response | null = null;
+    let schemaFileContent = {};
+    try {
+        fetchResponse = await fetch(originalUrl);
+    } catch (err) {
+        ValidationFactory.lastErrorMessage = err;
+        fetchResponse = null;
+    }
+    if (fetchResponse) {
+        try {
+            schemaFileContent = await fetchResponse.json();
+        } catch (err) {
+            ValidationFactory.lastErrorMessage = err;
+            schemaFileContent = '';
+        }
+        if (schemaFileContent) {
+            return fetchResponse;
+        }
+    }else {
+        return null;
+    }
+}
+
+export function replaceRefs(){
+
+}
 
 export abstract class ValidationFactory {
     public static lastErrorMessage: unknown = null;
@@ -96,6 +176,7 @@ export abstract class ValidationFactory {
                         myReturn = 'SCHEMA_INVALID'
                     }
                     if (schemaFileContent) {
+                        findExternalUri(schemaFileContent.toString());
                         const ajv = new Ajv();
                         try {
                             compiledSchema = ajv.compile(schemaFileContent);

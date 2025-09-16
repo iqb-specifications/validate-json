@@ -1,0 +1,408 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Survey Content Package Index",
+  "description": "Specification for survey content package index.",
+  "type": "object",
+  "properties": {
+    "packageId": {
+      "description": "Identifier for the survey content package",
+      "type": "string"
+    },
+    "version": {
+      "description": "Package Version in SemVer format.",
+      "type": "string"
+    },
+    "name": {
+      "$ref": "#/$defs/languageTaggedText"
+    },
+    "description": {
+      "$ref": "#/$defs/languageTaggedText"
+    },
+    "maintainerName": {
+      "description": "Name of the person or institution responsable for creating and maintaining",
+      "type": "string",
+      "examples": [
+        "IQB - Institut zur Qualitätsentwicklung im Bildungswesen"
+      ]
+    },
+    "maintainerUrl": {
+      "description": "Url of maintainer to get more information or to get in contact",
+      "type": "string",
+      "examples": [
+        "https://www.iqb.hu-berlin.de/tba"
+      ]
+    },
+    "status": {
+      "description": "Describes the progress of development and visibility issues. During development, version suffixes may be used like 'beta', 'rc' etc.",
+      "type": "string",
+      "enum": [
+        "IN_DEVELOPMENT",
+        "DISCONTINUED",
+        "RELEASED_PUBLIC",
+        "RELEASED_CONFIDENTIAL"
+      ],
+      "default": "IN_DEVELOPMENT"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "surveyParts": {
+      "description": "Groups of instruments, administrated the same way or at the same time.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/surveyPart"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "packageId",
+    "version",
+    "name"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "languageTaggedText": {
+      "description": "Language tagged text",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lang": {
+            "description": "ISO-language code",
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]{2}$"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lang",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "languageTaggedObjectRef": {
+      "description": "Variants of the same object in different languages",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "id/path to the object, used as reference",
+            "type": "string"
+          },
+          "lang": {
+            "type": "string",
+            "minLength": 1,
+            "description": "ISO-language code",
+            "pattern": "^[a-z]{2}$"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lang",
+          "label"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "unitDependency": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Id/path to find the digital object",
+          "type": "string"
+        },
+        "type": {
+          "description": "Describes the function of the dependency.",
+          "type": "string",
+          "enum": [
+            "UNIT_XML",
+            "CODING_SCHEME",
+            "METADATA",
+            "UI_DEFINITION",
+            "PLAYER",
+            "PLAYER_DEPENDENCY",
+            "WIDGET"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "unitInModule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identifier for the instrument",
+          "type": "string"
+        },
+        "alias": {
+          "description": "Identifier for responses",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "order": {
+          "description": "Default sorting is alpha-numeric.",
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "dependencies": {
+          "description": "All digital objects being part of the unit",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unitDependency"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "dependencies"
+      ],
+      "additionalProperties": false
+    },
+    "bookletModule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Id to be referred in instruments",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "lang": {
+          "description": "ISO-language code",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z]{2}$"
+        },
+        "units": {
+          "description": "All units being part of the module",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unitInModule"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "lang",
+        "units"
+      ],
+      "additionalProperties": false
+    },
+    "instrument": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identifier for the instrument",
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/$defs/languageTaggedText"
+        },
+        "metadata": {
+          "$ref": "#/$defs/metadata"
+        },
+        "testcenterBooklets": {
+          "description": "If part of TBA, this ids refer to the language specific XML definition used to run the instrument in IQB-Testcenter.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "lang": {
+                "type": "string",
+                "minLength": 1,
+                "description": "ISO-language code",
+                "pattern": "^[a-z]{2}$"
+              },
+              "definitionId": {
+                "description": "Id/path to the booklet XML to run this instrument",
+                "type": "string"
+              },
+              "modules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "moduleId": {
+                      "description": "Reference to the module id at surveyPart level",
+                      "type": "string"
+                    },
+                    "order": {
+                      "description": "Default sorting is alpha-numeric.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "default": 0
+                    }
+                  },
+                  "required": [
+                    "moduleId"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "lang",
+              "definitionId",
+              "modules"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "handOutsForTestTaker": {
+          "description": "All documents must be presented to the test taker (online or print-out).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "description": "Default sorting is alpha-numeric.",
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              },
+              "asPrintOut": {
+                "type": "boolean",
+                "default": false
+              },
+              "file": {
+                "description": "All language variants of the same hand-out",
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/languageTaggedObjectRef"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "file"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "handOutsForTestProctor": {
+          "description": "All documents must be presented to the test proctor (online or print-out).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "description": "Default sorting is alpha-numeric.",
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              },
+              "asPrintOut": {
+                "type": "boolean",
+                "default": false
+              },
+              "file": {
+                "description": "All language variants of the same hand-out",
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/languageTaggedObjectRef"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "file"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "surveyPart": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the survey part"
+        },
+        "name": {
+          "$ref": "#/$defs/languageTaggedText"
+        },
+        "description": {
+          "$ref": "#/$defs/languageTaggedText"
+        },
+        "metadata": {
+          "$ref": "#/$defs/metadata"
+        },
+        "bookletModules": {
+          "description": "All modules used in this surveyPart by instruments",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bookletModule"
+          },
+          "minItems": 1
+        },
+        "instruments": {
+          "description": "All instruments for the survey part, online or to hand out",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/instrument"
+          },
+          "minItems": 1
+        },
+        "analysis": {
+          "description": "Definitions on how to proceed the survey outcome.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scp-analysis"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "instruments"
+      ],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "$ref": "https://github.com/iqb-specifications/metadata-values/blob/main/metadata-values.schema.json"
+    },
+    "scp-analysis": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,458 @@
+{
+  "packageId": "IQB.VERA2027",
+  "version": "1.2.15",
+  "name": [
+    {
+      "lang": "de",
+      "value": "IQB VERA Vergleichsarbeiten Durchgang 2027"
+    }
+  ],
+  "description": [
+    {
+      "lang": "de",
+      "value": "Sämtliche Daten und Dokumente für die Online-Durchführung und Auswertung des Durchganges 2027 für VERA Vergleichsarbeiten Durchgang 2027"
+    }
+  ],
+  "maintainerName": "IQB - Institut zur Qualitätsentwicklung im Bildungswesen",
+  "maintainerUrl": "https://www.iqb.hu-berlin.de/tba",
+  "status": "RELEASED_CONFIDENTIAL",
+  "metadata": {
+    "profileId": "https://raw.githubusercontent.com/iqb-vocabs/p44/master/index.json",
+    "entries": [
+      {
+        "id": "e1",
+        "label": [
+          {
+            "lang": "de",
+            "value": "Art der Erhebung"
+          }
+        ],
+        "value": [
+          {
+            "id": "https://w3id.org/iqb/v85/dt/1"
+          }
+        ],
+        "valueAsText": [
+          {
+            "lang": "de",
+            "value": "Kompetenz- und Leistungsdaten"
+          }
+        ]
+      },
+      {
+        "id": "kim_type_school",
+        "label": [
+          {
+            "lang": "de",
+            "value": "Schulform"
+          }
+        ],
+        "value": [
+          {
+            "id": "https://w3id.org/kim/schularten/s02"
+          }
+        ],
+        "valueAsText": [
+          {
+            "lang": "de",
+            "value": "Grundschule"
+          }
+        ]
+      }
+    ]
+  },
+  "surveyParts": [
+    {
+      "id": "1",
+      "name": [
+        {
+          "lang": "de",
+          "value": "Mathematik"
+        }
+      ],
+      "description": [
+        {
+          "lang": "de",
+          "value": "Mathematik Leitideen 1 und 3"
+        }
+      ],
+      "bookletModules": [
+        {
+          "id": "MB",
+          "name": "Mathematik Basismodul",
+          "lang": "de",
+          "units": [
+            {
+              "id": "M355201",
+              "name": "1. Eine lustige Geschichte",
+              "order": 1,
+              "dependencies": [
+                {
+                  "id": "math/units/M355201.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M355201.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M355201.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M355201.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                }
+              ]
+            },
+            {
+              "id": "M354301",
+              "name": "2. Karl und Rosa",
+              "order": 2,
+              "dependencies": [
+                {
+                  "id": "math/units/M354301.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M354301.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M354301.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M354301.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                }
+              ]
+            },
+            {
+              "id": "M351111",
+              "name": "3. Auf dem Schulweg",
+              "order": 3,
+              "dependencies": [
+                {
+                  "id": "math/units/M351111.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M351111.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M351111.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M351111.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            },
+            {
+              "id": "M353331",
+              "name": "4. Ärgere dich nicht!",
+              "order": 4,
+              "dependencies": [
+                {
+                  "id": "math/units/M353331.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M353331.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M353331.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M353331.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ME1",
+          "name": "Mathematik Ergänzungsmodul 1",
+          "lang": "de",
+          "units": [
+            {
+              "id": "M888201",
+              "name": "1. Nimm es nicht so schwer!",
+              "order": 1,
+              "dependencies": [
+                {
+                  "id": "math/units/M888201.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M888201.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M888201.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M888201.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            },
+            {
+              "id": "M7777201",
+              "name": "2. Freunde für immer",
+              "order": 2,
+              "dependencies": [
+                {
+                  "id": "math/units/M7777201.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M7777201.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M7777201.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M7777201.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            },
+            {
+              "id": "M351111",
+              "name": "3. Wieviele Bäume im Wald?",
+              "order": 3,
+              "dependencies": [
+                {
+                  "id": "math/units/M351111.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M351111.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M351111.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M351111.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ME2",
+          "name": "Mathematik Ergänzungsmodul 2",
+          "lang": "de",
+          "units": [
+            {
+              "id": "M888201",
+              "name": "1. Nimm es nicht so schwer!",
+              "order": 1,
+              "dependencies": [
+                {
+                  "id": "math/units/M888201.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M888201.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M888201.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M888201.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            },
+            {
+              "id": "M7777201",
+              "name": "2. Freunde für immer",
+              "order": 2,
+              "dependencies": [
+                {
+                  "id": "math/units/M7777201.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M7777201.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M7777201.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M7777201.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            },
+            {
+              "id": "M351999",
+              "name": "3. Zum Mond und zurück",
+              "order": 3,
+              "dependencies": [
+                {
+                  "id": "math/units/M351999.xml",
+                  "type": "UNIT_XML"
+                },
+                {
+                  "id": "math/units/M351999.vocs",
+                  "type": "CODING_SCHEME"
+                },
+                {
+                  "id": "math/units/M351999.voud",
+                  "type": "UI_DEFINITION"
+                },
+                {
+                  "id": "math/units/M351999.vomd",
+                  "type": "METADATA"
+                },
+                {
+                  "id": "player/iqb-player-aspect-2.10.0.html",
+                  "type": "PLAYER"
+                },
+                {
+                  "id": "player/GeoGebra.itcr.zip",
+                  "type": "PLAYER_DEPENDENCY"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "instruments": [
+        {
+          "id": "THM1",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Mathematik Testheft Grundkurs"
+            }
+          ],
+          "testcenterBooklets": [
+            {
+              "lang": "de",
+              "definitionId": "math/booklets/ma-th1.xml",
+              "modules": [
+                {
+                  "moduleId": "MB",
+                  "order": 1
+                },
+                {
+                  "moduleId": "ME1",
+                  "order": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "THM2",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Mathematik Testheft Ergänzungskurs"
+            }
+          ],
+          "testcenterBooklets": [
+            {
+              "lang": "de",
+              "definitionId": "math/booklets/ma-th2.xml",
+              "modules": [
+                {
+                  "moduleId": "MB",
+                  "order": 1
+                },
+                {
+                  "moduleId": "ME2",
+                  "order": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
