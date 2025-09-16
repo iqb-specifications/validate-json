@@ -9,48 +9,95 @@ export interface dataObjectWithVersion {
 }
 export const ValidationErrors = ['INVALID', 'FILE_NOT_FOUND', 'FILE_PARSE_ERROR', 'VALIDATION_ERROR'];
 
-export function findExternalUri(schemaFilename: string):string {
+
+// export function findExternalUri(schemaFilename: string):string {
+//     let myReturn: ValidationResult = 'VALID';
+//     /**
+//      * Regular expression to match: "$ref": "http...until next quote
+//      */
+//     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
+//
+//     /**
+//      * Store mapping of original $ref → replacement
+//      */
+//     let refMap = new Map<string, Response>();
+//
+//     let counter = 1;
+//     // @ts-ignore
+//     let replacedContent = schemaFilename.replace(refRegex, async (match) => {
+//         const urlMatch = match.match(/"http[^"]*"/);
+//         if (!urlMatch) return match;
+//
+//         const originalUrl = urlMatch[0].slice(1, -1); // Remove surrounding quotes
+//
+//         // If we've seen this $ref before, reuse the same replacement
+//         if (refMap.has(originalUrl)) {
+//             const replacement = refMap.get(originalUrl)!;
+//         } else {
+//             // Create a unique replacement string
+//             // const replacement = `$ref": "REPLACED_REF_${counter++}`;
+//             const replacement = await fetchRefs(originalUrl);
+//             if (replacement !== null) {
+//                 // @ts-ignore
+//                 refMap.set(originalUrl, replacement);
+//             } else {
+//                 myReturn = 'SCHEMA_NOT_FOUND';
+//             }
+//         }
+//     });
+//
+//     console.log(`TODO ES ${replacedContent}`)
+//     return replacedContent;
+// }
+
+export async function findExternalUri(schemaContent: string): Promise<string> {
     let myReturn: ValidationResult = 'VALID';
-
-    /**
-     * Regular expression to match: "$ref": "http...until next quote
-     */
     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
+    const refMap = new Map<string, string>();
 
-    /**
-     * Store mapping of original $ref → replacement
-     */
-    const refMap = new Map<string, Response>();
+    // SAFE: Collect all matches using RegExp.exec
+    const matches: RegExpMatchArray[] = [];
+    let match: RegExpExecArray | null;
 
-    let counter = 1;
-    // @ts-ignore
-    const replacedContent = schemaFilename.replace(refRegex, async (match) => {
-        const urlMatch = match.match(/"http[^"]*"/);
-        if (!urlMatch) return match;
+    while ((match = refRegex.exec(schemaContent)) !== null) {
+        matches.push(match);
+    }
 
-        const originalUrl = urlMatch[0].slice(1, -1); // Remove surrounding quotes
+    // Fetch and prepare replacements
+    const fetchPromises = matches.map(async (match) => {
+        const urlMatch = match[0].match(/"http[^"]*"/);
+        if (!urlMatch) return;
 
-        // If we've seen this $ref before, reuse the same replacement
-        if (refMap.has(originalUrl)) {
-            const replacement = refMap.get(originalUrl)!;
-        } else {
-            // Create a unique replacement string
-            // const replacement = `$ref": "REPLACED_REF_${counter++}`;
+        const originalUrl = urlMatch[0].slice(1, -1);
+
+        if (!refMap.has(originalUrl)) {
             const replacement = await fetchRefs(originalUrl);
             if (replacement !== null) {
-                // @ts-ignore
                 refMap.set(originalUrl, replacement);
             } else {
                 myReturn = 'SCHEMA_NOT_FOUND';
+                refMap.set(originalUrl, match[0]);
             }
         }
     });
-    // console.log(`TODO ES ${replacedContent}`)
+
+    await Promise.all(fetchPromises);
+
+    const replacedContent = schemaContent.replace(refRegex, (match) => {
+        const urlMatch = match.match(/"http[^"]*"/);
+        if (!urlMatch) return match;
+
+        const originalUrl = urlMatch[0].slice(1, -1);
+        //console.log(` Soy asi ${JSON.stringify(refMap.get(originalUrl))}`);
+        return JSON.stringify(refMap.get(originalUrl)).substring(2,JSON.stringify(refMap.get(originalUrl)).length) ?? match;
+    });
+
+    console.log(`Final content: ${replacedContent}`);
     return replacedContent;
 }
 
 // @ts-ignore
-export async function fetchRefs(originalUrl: string): Promise<string>{
+export async function fetchRefs(originalUrl: string): Promise<>{
     originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
     // originalUrl = 'https://raw.githubusercontent.com/iqb-specifications/metadata-values/refs/heads/main/metadata-values.schema.json';
     let fetchResponse: Response | null = null;
@@ -70,7 +117,7 @@ export async function fetchRefs(originalUrl: string): Promise<string>{
         }
         if (schemaFileContent) {
             console.log(JSON.stringify(schemaFileContent));
-            return JSON.stringify(schemaFileContent);
+            return schemaFileContent;
         }
     }else {
         return "";
