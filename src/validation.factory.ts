@@ -1,6 +1,4 @@
 import Ajv from "ajv";
-import * as fs from 'fs';
-import * as path from 'path';
 
 export type ValidationResult = 'VALID' | 'SCHEMA_NOT_FOUND' | 'SCHEMA_INVALID' | 'SCHEMA_COMPILE_ERROR' | 'INVALID' | 'ERROR_PARSING_SCHEMA' |
                             'FILE_NOT_FOUND' | 'FILE_PARSE_ERROR' | 'VALIDATION_ERROR';
@@ -9,46 +7,18 @@ export interface dataObjectWithVersion {
 }
 export const ValidationErrors = ['INVALID', 'FILE_NOT_FOUND', 'FILE_PARSE_ERROR', 'VALIDATION_ERROR'];
 
+export function hasExternalUri(schemaContent:string):boolean {
+    const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
 
-// export function findExternalUri(schemaFilename: string):string {
-//     let myReturn: ValidationResult = 'VALID';
-//     /**
-//      * Regular expression to match: "$ref": "http...until next quote
-//      */
-//     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
-//
-//     /**
-//      * Store mapping of original $ref → replacement
-//      */
-//     let refMap = new Map<string, Response>();
-//
-//     let counter = 1;
-//     // @ts-ignore
-//     let replacedContent = schemaFilename.replace(refRegex, async (match) => {
-//         const urlMatch = match.match(/"http[^"]*"/);
-//         if (!urlMatch) return match;
-//
-//         const originalUrl = urlMatch[0].slice(1, -1); // Remove surrounding quotes
-//
-//         // If we've seen this $ref before, reuse the same replacement
-//         if (refMap.has(originalUrl)) {
-//             const replacement = refMap.get(originalUrl)!;
-//         } else {
-//             // Create a unique replacement string
-//             // const replacement = `$ref": "REPLACED_REF_${counter++}`;
-//             const replacement = await fetchRefs(originalUrl);
-//             if (replacement !== null) {
-//                 // @ts-ignore
-//                 refMap.set(originalUrl, replacement);
-//             } else {
-//                 myReturn = 'SCHEMA_NOT_FOUND';
-//             }
-//         }
-//     });
-//
-//     console.log(`TODO ES ${replacedContent}`)
-//     return replacedContent;
-// }
+    // SAFE: Collect all matches using RegExp.exec
+    const matches: RegExpMatchArray[] = [];
+    let match: RegExpExecArray | null;
+
+    while ((match = refRegex.exec(schemaContent)) !== null) {
+        matches.push(match);
+    }
+    return (matches.length>0);
+}
 
 export async function findExternalUri(schemaContent: string): Promise<string> {
     let myReturn: ValidationResult = 'VALID';
@@ -62,45 +32,44 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
     while ((match = refRegex.exec(schemaContent)) !== null) {
         matches.push(match);
     }
+    if (matches.length > 0) {
+        // Fetch and prepare replacements
+        const fetchPromises = matches.map(async (match) => {
+            const urlMatch = match[0].match(/"http[^"]*"/);
+            if (!urlMatch) return;
 
-    // Fetch and prepare replacements
-    const fetchPromises = matches.map(async (match) => {
-        const urlMatch = match[0].match(/"http[^"]*"/);
-        if (!urlMatch) return;
+            const originalUrl = urlMatch[0].slice(1, -1);
 
-        const originalUrl = urlMatch[0].slice(1, -1);
-
-        if (!refMap.has(originalUrl)) {
-            const replacement = await fetchRefs(originalUrl);
-            if (replacement !== null) {
-                refMap.set(originalUrl, replacement);
-            } else {
-                myReturn = 'SCHEMA_NOT_FOUND';
-                refMap.set(originalUrl, match[0]);
+            if (!refMap.has(originalUrl)) {
+                const replacement = await fetchRefs(originalUrl);
+                if (replacement !== null) {
+                    refMap.set(originalUrl, replacement);
+                } else {
+                    myReturn = 'SCHEMA_NOT_FOUND';
+                    refMap.set(originalUrl, match[0]);
+                }
             }
-        }
-    });
+        });
 
-    await Promise.all(fetchPromises);
+        await Promise.all(fetchPromises);
 
-    const replacedContent = schemaContent.replace(refRegex, (match) => {
-        const urlMatch = match.match(/"http[^"]*"/);
-        if (!urlMatch) return match;
+        return schemaContent.replace(refRegex, (match) => {
+            const urlMatch = match.match(/"http[^"]*"/);
+            if (!urlMatch) return match;
 
-        const originalUrl = urlMatch[0].slice(1, -1);
-        //console.log(` Soy asi ${JSON.stringify(refMap.get(originalUrl))}`);
-        return JSON.stringify(refMap.get(originalUrl)).substring(2,JSON.stringify(refMap.get(originalUrl)).length) ?? match;
-    });
-
-    console.log(`Final content: ${replacedContent}`);
-    return replacedContent;
+            const originalUrl = urlMatch[0].slice(1, -1);
+            return JSON.stringify(refMap.get(originalUrl)).substring(2, JSON.stringify(refMap.get(originalUrl)).length - 1) ?? match;
+        });
+    }else
+    {
+        return schemaContent;
+    }
 }
 
-// @ts-ignore
-export async function fetchRefs(originalUrl: string): Promise<>{
+
+export async function fetchRefs(originalUrl: string): Promise<any>{
     originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
-    // originalUrl = 'https://raw.githubusercontent.com/iqb-specifications/metadata-values/refs/heads/main/metadata-values.schema.json';
-    let fetchResponse: Response | null = null;
+    let fetchResponse: Response | null;
     let schemaFileContent = {};
     try {
         fetchResponse = await fetch(originalUrl);
@@ -116,7 +85,6 @@ export async function fetchRefs(originalUrl: string): Promise<>{
             schemaFileContent = '';
         }
         if (schemaFileContent) {
-            console.log(JSON.stringify(schemaFileContent));
             return schemaFileContent;
         }
     }else {
@@ -142,16 +110,35 @@ export abstract class ValidationFactory {
                 fileContent = null;
             }
             if (fileContent) {
-               // console.log(`HOLA mi tipo es ${(fileContent)}`);
-                findExternalUri(fileContent.toString());
                 const ajv = new Ajv();
-                try {
-                    const dataObject = JSON.parse(fileContent);
-                    compiledSchema = ajv.compile(dataObject);
-                    ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
-                } catch (err) {
-                    myReturn = 'SCHEMA_COMPILE_ERROR';
-                    ValidationFactory.lastErrorMessage = err;
+                if (hasExternalUri(fileContent)) {
+                    Promise.resolve(findExternalUri(fileContent.toString()))
+                        .then((value) => {
+                            const dataObject = JSON.parse(value);
+                            compiledSchema = ajv.compile(dataObject);
+                            console.log(`Imprimo data ${JSON.stringify(dataObject, null,2)}`);
+                            ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
+                            // Create a new schema with contains the no external refs
+                            fs.writeFile(schemaFilename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
+                                if (err_write) {
+                                    console.log(`Error writing file ${schemaFilename}`, err_write);
+                                } else {
+                                    console.log(`Writing ref_${schemaFilename}`);
+                                }
+                            });
+                        }).catch((err) => {
+                        myReturn = 'SCHEMA_COMPILE_ERROR';
+                        ValidationFactory.lastErrorMessage = err;
+                    });
+                }else{
+                    try {
+                        const dataObject = JSON.parse(fileContent);
+                        compiledSchema = ajv.compile(dataObject);
+                        ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
+                    } catch (err) {
+                        myReturn = 'SCHEMA_COMPILE_ERROR';
+                        ValidationFactory.lastErrorMessage = err;
+                    }
                 }
             }
         } else {
@@ -175,7 +162,6 @@ export abstract class ValidationFactory {
                 ValidationFactory.lastErrorMessage = err;
                 fileContent = null;
             }
-
             if (fileContent) {
                 try {
                     dataObject = JSON.parse(fileContent);
@@ -198,11 +184,10 @@ export abstract class ValidationFactory {
                 myReturn = ValidationFactory.invalidSchemas[schemaKey];
             } else {
                 const schemaUrl = `https://raw.githubusercontent.com/iqb-specifications/${schemaId}/refs/tags/${schemaVersion}/${schemaId}.schema.json`
-                let fetchResponse: Response | null = null;
+                let fetchResponse: Response | null;
                 let schemaFileContent = {};
                 try {
                     fetchResponse = await fetch(schemaUrl);
-                    console.log(`1 ${fetchResponse}`)
                 } catch (err) {
                     ValidationFactory.lastErrorMessage = err;
                     fetchResponse = null;
@@ -211,15 +196,12 @@ export abstract class ValidationFactory {
                 if (fetchResponse) {
                     try {
                         schemaFileContent = await fetchResponse.json();
-                        console.log(`111111111 ${JSON.stringify(schemaFileContent)}`)
                     } catch (err) {
                         ValidationFactory.lastErrorMessage = err;
                         schemaFileContent = '';
                         myReturn = 'SCHEMA_INVALID'
                     }
                     if (schemaFileContent) {
-                        schemaFileContent = findExternalUri(schemaFileContent.toString());
-                        console.log(`Paso por aqui ${schemaFileContent}` );
                         const ajv = new Ajv();
                         try {
                             compiledSchema = ajv.compile(schemaFileContent);
