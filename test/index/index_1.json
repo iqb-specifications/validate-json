@@ -61,6 +61,34 @@
       }
     ]
   },
+  "codingParameters": {
+    "statusMapping": [
+      {
+        "itemValueType": "MISSING",
+        "status": [
+          "UNSET",
+          "NOT_REACHED",
+          "DISPLAYED",
+          "VALUE_CHANGED",
+          "DERIVE_ERROR"
+        ]
+      },
+      {
+        "itemValueType": "FULL_CREDIT",
+        "status": [
+          "NO_CODING",
+          "INVALID",
+          "CODING_INCOMPLETE",
+          "CODING_ERROR",
+          "PARTLY_DISPLAYED",
+          "DERIVE_PENDING",
+          "INTENDED_INCOMPLETE",
+          "CODE_SELECTION_PENDING"
+        ]
+      }
+    ],
+    "minItemsPercent": 60
+  },
   "surveyParts": [
     {
       "id": "1",
@@ -410,7 +438,7 @@
               "value": "Mathematik Testheft Grundkurs"
             }
           ],
-          "testcenterBooklets": [
+          "testcenterBooklet": [
             {
               "lang": "de",
               "definitionId": "math/booklets/ma-th1.xml",
@@ -435,7 +463,7 @@
               "value": "Mathematik Testheft Ergänzungskurs"
             }
           ],
-          "testcenterBooklets": [
+          "testcenterBooklet": [
             {
               "lang": "de",
               "definitionId": "math/booklets/ma-th2.xml",
@@ -447,6 +475,209 @@
                 {
                   "moduleId": "ME2",
                   "order": 2
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "id": "F9283a",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Teilaufgabe A"
+            }
+          ],
+          "sources": [
+            {
+              "moduleId": "F4",
+              "unitId": "F9283",
+              "sourceVariable": "a3"
+            },
+            {
+              "moduleId": "F6",
+              "unitId": "F9283",
+              "unitAlias": "F9283_2",
+              "sourceVariable": "a3"
+            }
+          ]
+        },
+        {
+          "id": "F9283b",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Teilaufgabe B"
+            }
+          ],
+          "sources": [
+            {
+              "moduleId": "F4",
+              "unitId": "F9283",
+              "sourceVariable": "b"
+            },
+            {
+              "moduleId": "F6",
+              "unitId": "F9283",
+              "unitAlias": "F9283_2",
+              "sourceVariable": "b"
+            }
+          ]
+        },
+        {
+          "id": "F9283c",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Teilaufgabe C"
+            }
+          ],
+          "sources": [
+            {
+              "moduleId": "F4",
+              "unitId": "F9283",
+              "sourceVariable": "c_3"
+            },
+            {
+              "moduleId": "F6",
+              "unitId": "F9283",
+              "unitAlias": "F9283_2",
+              "sourceVariable": "c_3"
+            }
+          ]
+        }
+      ],
+      "baseScales": [
+        {
+          "id": "IQB.FCSum",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Summe aller Items für Französisch Lesen"
+            },
+            {
+              "lang": "en",
+              "value": "Full credit sum for all items for reading comprehension french language"
+            }
+          ],
+          "method": "SUM",
+          "items": [
+            "F9283a",
+            "F9283b",
+            "F9283c"
+          ]
+        },
+        {
+          "id": "IQB.FCRatio",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Lösungshäufigkeit Französisch Lesen"
+            },
+            {
+              "lang": "en",
+              "value": "Full credit ratio for reading comprehension french language"
+            }
+          ],
+          "method": "RATIO",
+          "methodParameters": {
+            "maxValue": 15
+          },
+          "items": [
+            "F9283a",
+            "F9283b",
+            "F9283c"
+          ]
+        }
+      ],
+      "derivedScales": [
+        {
+          "id": "IQB.Komp.GER",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Lesen Französisch GER"
+            }
+          ],
+          "description": [
+            {
+              "lang": "de",
+              "value": "Lesekompetenz Französisch in den Stufen des Gemeinsamen Europäischen Referenzrahmens für Sprachen"
+            }
+          ],
+          "source": "IQB.FCRatio",
+          "mappings": [
+            {
+              "method": "LESS_THAN",
+              "parameters": [
+                "30"
+              ],
+              "newValue": 1,
+              "valueLabel": [
+                {
+                  "lang": "de",
+                  "value": "Stufe A1"
+                }
+              ],
+              "valueDescription": [
+                {
+                  "lang": "de",
+                  "value": "Kann sehr kurze, einfache Texte Satz für Satz lesen und verstehen, indem er/sie bekannte Namen, Wörter und einfachste Wendungen heraussucht und, wenn nötig, den Text mehrmals liest."
+                }
+              ]
+            },
+            {
+              "method": "LESS_THAN",
+              "parameters": [
+                "60"
+              ],
+              "newValue": 2,
+              "valueLabel": [
+                {
+                  "lang": "de",
+                  "value": "Stufe B1"
+                }
+              ]
+            },
+            {
+              "method": "LESS_THAN",
+              "parameters": [
+                "80"
+              ],
+              "newValue": 3,
+              "valueLabel": [
+                {
+                  "lang": "de",
+                  "value": "Stufe C1"
+                }
+              ]
+            }
+          ],
+          "elseValue": 5,
+          "elseValueLabel": [
+            {
+              "lang": "de",
+              "value": "Stufe C2"
+            }
+          ],
+          "relatedVocabularies": [
+            {
+              "url": "https://w3id.org/iqb/v10/a1/",
+              "name": "Kompetenzstufenmodell Mathematik Sek 1",
+              "values": [
+                {
+                  "value": 1,
+                  "url": "https://w3id.org/iqb/v10/a1/f3q"
+                },
+                {
+                  "value": 2,
+                  "url": "https://w3id.org/iqb/v10/a1/v9q"
+                },
+                {
+                  "value": 3,
+                  "url": "https://w3id.org/iqb/v10/a1/r5c"
                 }
               ]
             }
