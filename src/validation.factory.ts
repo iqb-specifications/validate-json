@@ -116,7 +116,6 @@ export abstract class ValidationFactory {
                         .then((value) => {
                             const dataObject = JSON.parse(value);
                             compiledSchema = ajv.compile(dataObject);
-                            console.log(`Imprimo data ${JSON.stringify(dataObject, null,2)}`);
                             ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
                             // Create a new schema with contains the no external refs
                             fs.writeFile(schemaFilename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
