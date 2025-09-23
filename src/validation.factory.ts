@@ -27,6 +27,8 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
 
     // SAFE: Collect all matches using RegExp.exec
     const matches: RegExpMatchArray[] = [];
+    const sufix= [ 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+    let num = 0;
     let match: RegExpExecArray | null;
 
     while ((match = refRegex.exec(schemaContent)) !== null) {
@@ -41,9 +43,11 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
             const originalUrl = urlMatch[0].slice(1, -1);
 
             if (!refMap.has(originalUrl)) {
-                const replacement = await fetchRefs(originalUrl);
+                const replacement = await fetchRefs(originalUrl, sufix[num]);
+
                 if (replacement !== null) {
                     refMap.set(originalUrl, replacement);
+                    num = num + 1;
                 } else {
                     myReturn = 'SCHEMA_NOT_FOUND';
                     refMap.set(originalUrl, match[0]);
@@ -58,8 +62,11 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
             if (!urlMatch) return match;
 
             const originalUrl = urlMatch[0].slice(1, -1);
+            // Instead of replace, we have to delete id and schema lines and move all defs
+
             return JSON.stringify(refMap.get(originalUrl)).substring(2, JSON.stringify(refMap.get(originalUrl)).length - 1) ?? match;
         });
+
     }else
     {
         return schemaContent;
@@ -67,7 +74,7 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
 }
 
 
-export async function fetchRefs(originalUrl: string): Promise<any>{
+export async function fetchRefs(originalUrl: string, sufix: string): Promise<any>{
     originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
     let fetchResponse: Response | null;
     let schemaFileContent = {};
@@ -85,11 +92,68 @@ export async function fetchRefs(originalUrl: string): Promise<any>{
             schemaFileContent = '';
         }
         if (schemaFileContent) {
-            return schemaFileContent;
+            // schemaFileContent = withoutProperty(schemaFileContent, '$schema');
+            // schemaFileContent = withoutProperty(schemaFileContent, '$id');
+            console.log(`Todo el documento: ${JSON.stringify(schemaFileContent)}`);
+            schemaFileContent = updateRefs(schemaFileContent, sufix);
+            console.log(`Documento con X: ${JSON.stringify(schemaFileContent)}`);
+            const updatedDefs = returnProperty(schemaFileContent, '$defs');
+            schemaFileContent = withoutProperty(schemaFileContent, '$defs');
+            return { ...schemaFileContent, ...updatedDefs };
         }
     }else {
         return "";
     }
+}
+
+type JSONValue = string | number | boolean | JSONObject | JSONArray;
+interface JSONObject { [key: string]: JSONValue; }
+interface JSONArray extends Array<JSONValue> {}
+
+/**
+ * Recursively traverse the JSON and update all $ref values
+ * by inserting a string into the middle of the path.
+ */
+function updateRefs(obj: JSONValue, insertStr: string): JSONValue {
+    if (Array.isArray(obj)) {
+        return obj.map(item => updateRefs(item, insertStr));
+    } else if (typeof obj === 'object' && obj !== null) {
+        const newObj: JSONObject = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (key === '$ref' && typeof value === 'string') {
+                newObj[key] = modifyRef(value, insertStr);
+            } else {
+                newObj[key] = updateRefs(value, insertStr);
+            }
+        }
+        return newObj;
+    }
+    return obj;
+}
+
+/**
+ * Insert a string into the middle of a $ref path.
+ * For example: "#/components/schemas/User" → "#/components/schemas/UserX"
+ */
+function modifyRef(refPath: string, insertStr: string): string {
+    const parts = refPath.split('/');
+    if (parts.length > 2) {
+        // Insert before the last part (i.e., before "User")
+        parts[parts.length - 1] += "_"+insertStr;
+    }
+    return parts.join('/');
+}
+
+// @ts-ignore
+function withoutProperty(obj, property){
+    const { [property]: unused, ...rest } = obj;
+    return rest;
+}
+
+// @ts-ignore
+function returnProperty(obj, property){
+    const { [property]: unused, ...rest } = obj;
+    return unused;
 }
 
 export abstract class ValidationFactory {
@@ -118,6 +182,7 @@ export abstract class ValidationFactory {
                             compiledSchema = ajv.compile(dataObject);
                             ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
                             // Create a new schema with contains the no external refs
+                            // Instead of write the new file, validate the rest of the schema
                             fs.writeFile(schemaFilename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
                                 if (err_write) {
                                     console.log(`Error writing file ${schemaFilename}`, err_write);
