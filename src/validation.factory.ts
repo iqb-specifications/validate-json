@@ -24,6 +24,7 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
     let myReturn: ValidationResult = 'VALID';
     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
     const refMap = new Map<string, string>();
+    let additionalDef: Record<string, string> = {};
 
     // SAFE: Collect all matches using RegExp.exec
     const matches: RegExpMatchArray[] = [];
@@ -43,11 +44,13 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
             const originalUrl = urlMatch[0].slice(1, -1);
 
             if (!refMap.has(originalUrl)) {
-                const replacement = await fetchRefs(originalUrl, sufix[num]);
+                const [replacement, endDefs] = await fetchRefs(originalUrl, sufix[num]);
 
                 if (replacement !== null) {
                     refMap.set(originalUrl, replacement);
                     num = num + 1;
+                    // Concatenate additional defs at the end of the schema
+                    additionalDef = {...additionalDef, ...endDefs};
                 } else {
                     myReturn = 'SCHEMA_NOT_FOUND';
                     refMap.set(originalUrl, match[0]);
@@ -56,23 +59,26 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
         });
 
         await Promise.all(fetchPromises);
-
-        return schemaContent.replace(refRegex, (match) => {
+        let schema = schemaContent.replace(refRegex, (match) => {
             const urlMatch = match.match(/"http[^"]*"/);
             if (!urlMatch) return match;
 
             const originalUrl = urlMatch[0].slice(1, -1);
             // Instead of replace, we have to delete id and schema lines and move all defs
-
             return JSON.stringify(refMap.get(originalUrl)).substring(2, JSON.stringify(refMap.get(originalUrl)).length - 1) ?? match;
         });
+        // console.log(`Schema before: ${schema}`);
 
+        // Add additional defs to the schema:
+        schema = addToAProperty(JSON.parse(schema), '$defs', JSON.stringify(additionalDef));
+        // console.log(`Additional total defs are: ${JSON.stringify(additionalDef, null, 2)}`);
+        // console.log(`Schema: ${JSON.stringify(schema)}`);
+        return JSON.stringify(schema);
     }else
     {
         return schemaContent;
     }
 }
-
 
 export async function fetchRefs(originalUrl: string, sufix: string): Promise<any>{
     originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
@@ -92,18 +98,55 @@ export async function fetchRefs(originalUrl: string, sufix: string): Promise<any
             schemaFileContent = '';
         }
         if (schemaFileContent) {
-            // schemaFileContent = withoutProperty(schemaFileContent, '$schema');
-            // schemaFileContent = withoutProperty(schemaFileContent, '$id');
-            console.log(`Todo el documento: ${JSON.stringify(schemaFileContent)}`);
+
+            // Add sufix to all $ref
             schemaFileContent = updateRefs(schemaFileContent, sufix);
-            console.log(`Documento con X: ${JSON.stringify(schemaFileContent)}`);
+
+            // Delete properties id and schema
+            schemaFileContent = withoutProperty(schemaFileContent, '$id');
+            schemaFileContent = withoutProperty(schemaFileContent, '$schema');
+
+            // Get the defs,
             const updatedDefs = returnProperty(schemaFileContent, '$defs');
+            const updatedDefsWithSufix: Record<string, any> = {};
+
+            // Update the keys
+            for (const key in updatedDefs) {
+                if (updatedDefs.hasOwnProperty(key)) {
+                    const newKey = key+"_"+sufix;
+                    updatedDefsWithSufix[newKey] = updatedDefs[key];
+                }
+            }
+
+            // Delete $defs from the actual schema
             schemaFileContent = withoutProperty(schemaFileContent, '$defs');
-            return { ...schemaFileContent, ...updatedDefs };
+
+            // Print out both schemas we have
+             // console.log(`Documento sin defs: ${JSON.stringify(schemaFileContent)}`);
+             // console.log(`Documento con defs: ${JSON.stringify(updatedDefsWithSufix, null, 2)}`);
+            return [schemaFileContent, updatedDefsWithSufix];
         }
     }else {
-        return "";
+        return '';
     }
+}
+
+// @ts-ignore
+function withoutProperty(obj, property){
+    const { [property]: unused, ...rest } = obj;
+    return rest;
+}
+
+// @ts-ignore
+function returnProperty(obj, property){
+    const { [property]: unused, ...rest } = obj;
+    return unused;
+}
+
+// @ts-ignore
+function addToAProperty(obj, property, value){
+    obj[property] = { ...obj[property] , ...JSON.parse(value)};
+    return obj;
 }
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray;
@@ -144,24 +187,14 @@ function modifyRef(refPath: string, insertStr: string): string {
     return parts.join('/');
 }
 
-// @ts-ignore
-function withoutProperty(obj, property){
-    const { [property]: unused, ...rest } = obj;
-    return rest;
-}
 
-// @ts-ignore
-function returnProperty(obj, property){
-    const { [property]: unused, ...rest } = obj;
-    return unused;
-}
 
 export abstract class ValidationFactory {
     public static lastErrorMessage: unknown = null;
     private static invalidSchemas: Record<string, ValidationResult> = {};
     private static compiledSchemas: Record<string, any> = {};
 
-    public static addLocalSchema(schemaFilename: string, schemaId: string, schemaVersion: string): ValidationResult {
+    public static addLocalSchema(schemaFilename: string, schemaId: string, schemaVersion: string): ValidationResult{
         let myReturn: ValidationResult = 'VALID';
         const fs = require('fs');
         if (fs.existsSync(schemaFilename)) {
@@ -179,10 +212,13 @@ export abstract class ValidationFactory {
                     Promise.resolve(findExternalUri(fileContent.toString()))
                         .then((value) => {
                             const dataObject = JSON.parse(value);
+                            // console.log(`Schema with external refs: ${JSON.stringify(dataObject, null, 2)}`);
                             compiledSchema = ajv.compile(dataObject);
                             ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
                             // Create a new schema with contains the no external refs
                             // Instead of write the new file, validate the rest of the schema
+
+                            // @ts-ignore
                             fs.writeFile(schemaFilename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
                                 if (err_write) {
                                     console.log(`Error writing file ${schemaFilename}`, err_write);
