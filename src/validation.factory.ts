@@ -23,12 +23,12 @@ export function hasExternalUri(schemaContent:string):boolean {
     return (matches.length>0);
 }
 
-export async function findExternalUri(schemaContent: string): Promise<string> {
+async function findExternalUri(schemaContent: string, num:number): Promise<string> {
+    let recursive= false;
     let myReturn: ValidationResult = 'VALID';
     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
-    const refMap = new Map<string, string>();
     let additionalDef: Record<string, string> = {};
-
+    const refMap = new Map<string, string>();
     // SAFE: Collect all matches using RegExp.exec
     const matches: RegExpMatchArray[] = [];
     let match: RegExpExecArray | null;
@@ -36,19 +36,29 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
     while ((match = refRegex.exec(schemaContent)) !== null) {
         matches.push(match);
     }
+    console.log(`La longitud exterior antes es ${matches.length}`)
     if (matches.length > 0) {
         // Fetch and prepare replacements
         const fetchPromises = matches.map(async (match) => {
             const urlMatch = match[0].match(/"http[^"]*"/);
+            console.log(`URL match es ${urlMatch}`);
+
             if (!urlMatch) return;
 
             const originalUrl = urlMatch[0].slice(1, -1);
+            console.log(`URL  original  es ${originalUrl}`);
 
             if (!refMap.has(originalUrl)) {
                 num = num + 1;
                 console.log(`Imprimo el numero ${num}`)
                 const [replacement, endDefs] = await fetchRefs(originalUrl, num);
+                console.log(`Soy el replacement ${JSON.stringify(replacement)}`);
+                // check whether it has insider reference, do recursive calls
+                if (hasExternalUri(JSON.stringify(replacement))|| hasExternalUri(JSON.stringify(endDefs))) {
+                  recursive = true;
+                }
 
+                console.log(`La longitud exterior despues es ${matches.length}`)
                 if (replacement !== null) {
                     console.log(`Imprimo el numero dentro ${num}`);
                     refMap.set(originalUrl, replacement);
@@ -77,9 +87,13 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
         // Add additional defs to the schema:
         schema = addToAProperty(JSON.parse(schema), '$defs', JSON.stringify(additionalDef));
         // console.log(`Additional total defs are: ${JSON.stringify(additionalDef, null, 2)}`);
-        console.log(`Schema: ${JSON.stringify(schema)}`);
-        return JSON.stringify(schema);
-    }else
+        console.log(`Schema111: ${JSON.stringify(schema)}`);
+        if (recursive)
+            return findExternalUri(JSON.stringify(schema), num);
+        else
+            return JSON.stringify(schema);
+    }
+else
     {
         return schemaContent;
     }
@@ -217,7 +231,8 @@ export abstract class ValidationFactory {
             if (fileContent) {
                 const ajv = new Ajv();
                 if (hasExternalUri(fileContent)) {
-                    Promise.resolve(findExternalUri(fileContent.toString()))
+                    const refMap = new Map<string, string>();
+                    Promise.resolve(findExternalUri(fileContent.toString(), num))
                         .then((value) => {
                             const dataObject = JSON.parse(value);
                             // console.log(`Schema with external refs: ${JSON.stringify(dataObject, null, 2)}`);
