@@ -769,7 +769,447 @@
       "additionalProperties": false
     },
     "metadata": {
-      "$ref": "https://w3id.org/iqb/spec/metadata-values/3.0"
+      "title": "Metadata Values",
+      "description": "Data structure to store metadata",
+      "type": "object",
+      "properties": {
+        "profileId": {
+          "type": "string",
+          "description": "Identifier for the metadata profile",
+          "minLength": 1
+        },
+        "order": {
+          "type": "integer",
+          "description": "Specifies the position of this profile if more than one are used. Set to -1 if you want to hide/disable the profile."
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Id of the profile entry related to these data",
+                "minLength": 1
+              },
+              "label": {
+                "$ref": "#/$defs/language_coded_texts_A"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/language_coded_texts_A"
+                  },
+                  {
+                    "$ref": "#/$defs/vocabulary_entries_A"
+                  },
+                  {
+                    "$ref": "#/$defs/simple_value_A"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "value"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "profileId",
+        "entries"
+      ],
+      "additionalProperties": false
+    },
+    "scp-analysis": {
+      "title": "Survey output analysis",
+      "description": "Specification for processing survey output.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identifier to handle different analysis definitions.",
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/$defs/languageTaggedText_B"
+        },
+        "description": {
+          "$ref": "#/$defs/languageTaggedText_B"
+        },
+        "items": {
+          "description": "Definition of all items from all modules.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item_B"
+          },
+          "minItems": 1
+        },
+        "statusMapping": {
+          "description": "Rules how to translate response status into item value",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemValue": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "UNSET",
+                    "NOT_REACHED",
+                    "DISPLAYED",
+                    "VALUE_CHANGED",
+                    "DERIVE_ERROR",
+                    "NO_CODING",
+                    "INVALID",
+                    "CODING_INCOMPLETE",
+                    "CODING_ERROR",
+                    "PARTLY_DISPLAYED",
+                    "DERIVE_PENDING",
+                    "INTENDED_INCOMPLETE",
+                    "CODE_SELECTION_PENDING"
+                  ]
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "itemValue",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "itemScales": {
+          "description": "Scales based directly on item values, providing one numeric value per test taker",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Identifier referred by other scales and survey output.",
+                "type": "string"
+              },
+              "name": {
+                "$ref": "#/$defs/languageTaggedText_B"
+              },
+              "description": {
+                "$ref": "#/$defs/languageTaggedText_B"
+              },
+              "method": {
+                "description": "Way how to process the item values.",
+                "type": "string",
+                "enum": [
+                  "SUM",
+                  "RATIO",
+                  "MEAN",
+                  "MEDIAN"
+                ]
+              },
+              "methodParameters": {
+                "description": "Depending on the method, different parameters specify the processing.",
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/methodParametersRatio_B"
+                  }
+                ]
+              },
+              "items": {
+                "description": "List of all items providing it's value to this specific scale",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "itemId": {
+                      "description": "This parameter refers to one entry of the surveyPart item list.",
+                      "type": "string"
+                    },
+                    "weight": {
+                      "description": "Modifies the item value before processing - works as a multiplier.",
+                      "type": "number",
+                      "default": 1
+                    }
+                  },
+                  "required": [
+                    "itemId"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "method",
+              "items"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "derivedScales": {
+          "description": "Scales based on other scale's value, providing one alphanumeric value per test taker",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Identifier referred by other scales and survey output.",
+                "type": "string"
+              },
+              "name": {
+                "$ref": "#/$defs/languageTaggedText_B"
+              },
+              "description": {
+                "$ref": "#/$defs/languageTaggedText_B"
+              },
+              "source": {
+                "description": "Id of the scale providing the value for this derived scale",
+                "type": "string"
+              },
+              "preProcessing": {
+                "description": "Modifies the value before mapping.",
+                "type": "string",
+                "enum": [
+                  "TO_LOWER_CASE",
+                  "ROUND_TO_INTEGER"
+                ]
+              },
+              "mappings": {
+                "description": "Applies the method to the value. The first match will go.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "description": "Condition for evaluation",
+                      "enum": [
+                        "MATCH",
+                        "MATCH_REGEX",
+                        "LESS_THAN",
+                        "MORE_THAN",
+                        "MAX",
+                        "MIN"
+                      ]
+                    },
+                    "parameters": {
+                      "type": "array",
+                      "description": "Depending on the method, additional parameter(s) is needed.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1
+                    },
+                    "newValue": {
+                      "description": "Value as outcome of this scale",
+                      "type": "string"
+                    },
+                    "valueLabel": {
+                      "$ref": "#/$defs/languageTaggedText_B"
+                    },
+                    "valueDescription": {
+                      "$ref": "#/$defs/languageTaggedText_B"
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "parameters",
+                    "newValue"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "elseValue": {
+                "description": "Value if no mapping matches",
+                "type": "string",
+                "default": "0"
+              },
+              "elseValueLabel": {
+                "$ref": "#/$defs/languageTaggedText_B"
+              },
+              "elseValueDescription": {
+                "$ref": "#/$defs/languageTaggedText_B"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "source",
+              "mappings"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "id",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "language_coded_texts_A": {
+      "type": "array",
+      "description": "Used for storing the input of texts. This type applies also in cases when only one language is used.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lang": {
+            "type": "string",
+            "minLength": 1,
+            "description": "ISO-language code",
+            "pattern": "^[a-z]{2}$"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lang",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "vocabulary_entries_A": {
+      "type": "array",
+      "description": "Used for storing selected vocabulary entries and (optional) additional texts.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Full id of the vocabulary entry as url - including the vocabulary url"
+          },
+          "label": {
+            "$ref": "#/$defs/language_coded_texts_A"
+          },
+          "annotation": {
+            "$ref": "#/$defs/language_coded_texts_A"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "simple_value_A": {
+      "type": "object",
+      "description": "Used for uncoded text, numbers and boolean.",
+      "properties": {
+        "raw": {
+          "type": "string",
+          "description": "Pure value. Numbers and boolean in JavaScript toString() notation ('true', 'false', '23.566')."
+        },
+        "asText": {
+          "$ref": "#/$defs/language_coded_texts_A"
+        }
+      },
+      "required": [
+        "raw"
+      ],
+      "additionalProperties": false
+    },
+    "languageTaggedText_B": {
+      "description": "Language tagged text",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lang": {
+            "description": "ISO-language code",
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]{2}$"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lang",
+          "value"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "metadata_B": {
+      "$ref": "https://w3id.org/iqb/spec/metadata-values/3.0_B"
+    },
+    "item_B": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Identifier used in all other definitions of this document",
+          "type": "string"
+        },
+        "name": {
+          "$ref": "#/$defs/languageTaggedText_B"
+        },
+        "sources": {
+          "description": "This item will get its value from various sources throughout the survey",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "moduleId": {
+                "description": "Refers to the module used by an instrument of the surveyPart",
+                "type": "string"
+              },
+              "unitId": {
+                "description": "Refers to the unit data (UI definition, coding scheme, metadata etc.)",
+                "type": "string"
+              },
+              "unitAlias": {
+                "description": "Refers to the unit id used in response data",
+                "type": "string"
+              },
+              "sourceVariable": {
+                "description": "Refers to the variable providing its score as item value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "moduleId",
+              "unitId",
+              "sourceVariable"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sources"
+      ],
+      "additionalProperties": false
+    },
+    "methodParametersRatio_B": {
+      "description": "Parameters for the processing method RATIO.",
+      "type": "object",
+      "properties": {
+        "maxValue": {
+          "description": "If methodParameters is not given, the number of items will be taken as maxValue",
+          "type": "number"
+        }
+      },
+      "required": [
+        "maxValue"
+      ],
+      "additionalProperties": false
     }
   }
 }

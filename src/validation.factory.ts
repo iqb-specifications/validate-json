@@ -28,7 +28,7 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
 
     // SAFE: Collect all matches using RegExp.exec
     const matches: RegExpMatchArray[] = [];
-    const sufix= [ 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+    const suffix= [ '_','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
     let num = 0;
     let match: RegExpExecArray | null;
 
@@ -44,11 +44,11 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
             const originalUrl = urlMatch[0].slice(1, -1);
 
             if (!refMap.has(originalUrl)) {
-                const [replacement, endDefs] = await fetchRefs(originalUrl, sufix[num]);
+                num = num + 1;
+                const [replacement, endDefs] = await fetchRefs(originalUrl, suffix[num]);
 
                 if (replacement !== null) {
                     refMap.set(originalUrl, replacement);
-                    num = num + 1;
                     // Concatenate additional defs at the end of the schema
                     additionalDef = {...additionalDef, ...endDefs};
                 } else {
@@ -80,7 +80,7 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
     }
 }
 
-export async function fetchRefs(originalUrl: string, sufix: string): Promise<any>{
+export async function fetchRefs(originalUrl: string, suffix: string): Promise<any>{
     originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
     let fetchResponse: Response | null;
     let schemaFileContent = {};
@@ -99,8 +99,8 @@ export async function fetchRefs(originalUrl: string, sufix: string): Promise<any
         }
         if (schemaFileContent) {
 
-            // Add sufix to all $ref
-            schemaFileContent = updateRefs(schemaFileContent, sufix);
+            // Add suffix to all $ref
+            schemaFileContent = updateRefs(schemaFileContent, suffix);
 
             // Delete properties id and schema
             schemaFileContent = withoutProperty(schemaFileContent, '$id');
@@ -108,13 +108,13 @@ export async function fetchRefs(originalUrl: string, sufix: string): Promise<any
 
             // Get the defs,
             const updatedDefs = returnProperty(schemaFileContent, '$defs');
-            const updatedDefsWithSufix: Record<string, any> = {};
+            const updatedDefsWithSuffix: Record<string, any> = {};
 
             // Update the keys
             for (const key in updatedDefs) {
                 if (updatedDefs.hasOwnProperty(key)) {
-                    const newKey = key+"_"+sufix;
-                    updatedDefsWithSufix[newKey] = updatedDefs[key];
+                    const newKey = key+"_"+suffix;
+                    updatedDefsWithSuffix[newKey] = updatedDefs[key];
                 }
             }
 
@@ -123,8 +123,8 @@ export async function fetchRefs(originalUrl: string, sufix: string): Promise<any
 
             // Print out both schemas we have
              // console.log(`Documento sin defs: ${JSON.stringify(schemaFileContent)}`);
-             // console.log(`Documento con defs: ${JSON.stringify(updatedDefsWithSufix, null, 2)}`);
-            return [schemaFileContent, updatedDefsWithSufix];
+             // console.log(`Documento con defs: ${JSON.stringify(updatedDefsWithSuffix, null, 2)}`);
+            return [schemaFileContent, updatedDefsWithSuffix];
         }
     }else {
         return '';
