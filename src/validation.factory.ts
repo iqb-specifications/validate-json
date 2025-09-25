@@ -7,6 +7,9 @@ export interface dataObjectWithVersion {
 }
 export const ValidationErrors = ['INVALID', 'FILE_NOT_FOUND', 'FILE_PARSE_ERROR', 'VALIDATION_ERROR'];
 
+const suffix= [ '_','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+let num = 0;
+
 export function hasExternalUri(schemaContent:string):boolean {
     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
 
@@ -28,8 +31,6 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
 
     // SAFE: Collect all matches using RegExp.exec
     const matches: RegExpMatchArray[] = [];
-    const suffix= [ '_','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-    let num = 0;
     let match: RegExpExecArray | null;
 
     while ((match = refRegex.exec(schemaContent)) !== null) {
@@ -45,9 +46,11 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
 
             if (!refMap.has(originalUrl)) {
                 num = num + 1;
-                const [replacement, endDefs] = await fetchRefs(originalUrl, suffix[num]);
+                console.log(`Imprimo el numero ${num}`)
+                const [replacement, endDefs] = await fetchRefs(originalUrl, num);
 
                 if (replacement !== null) {
+                    console.log(`Imprimo el numero dentro ${num}`);
                     refMap.set(originalUrl, replacement);
                     // Concatenate additional defs at the end of the schema
                     additionalDef = {...additionalDef, ...endDefs};
@@ -64,6 +67,8 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
             if (!urlMatch) return match;
 
             const originalUrl = urlMatch[0].slice(1, -1);
+
+            // console.log(`estoy despues ${JSON.stringify(refMap.get(originalUrl))}`);
             // Instead of replace, we have to delete id and schema lines and move all defs
             return JSON.stringify(refMap.get(originalUrl)).substring(2, JSON.stringify(refMap.get(originalUrl)).length - 1) ?? match;
         });
@@ -72,7 +77,7 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
         // Add additional defs to the schema:
         schema = addToAProperty(JSON.parse(schema), '$defs', JSON.stringify(additionalDef));
         // console.log(`Additional total defs are: ${JSON.stringify(additionalDef, null, 2)}`);
-        // console.log(`Schema: ${JSON.stringify(schema)}`);
+        console.log(`Schema: ${JSON.stringify(schema)}`);
         return JSON.stringify(schema);
     }else
     {
@@ -80,7 +85,7 @@ export async function findExternalUri(schemaContent: string): Promise<string> {
     }
 }
 
-export async function fetchRefs(originalUrl: string, suffix: string): Promise<any>{
+export async function fetchRefs(originalUrl: string, position: number): Promise<any>{
     originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
     let fetchResponse: Response | null;
     let schemaFileContent = {};
@@ -98,33 +103,33 @@ export async function fetchRefs(originalUrl: string, suffix: string): Promise<an
             schemaFileContent = '';
         }
         if (schemaFileContent) {
+                // Add suffix to all $ref
+                schemaFileContent = updateRefs(schemaFileContent, suffix[position]);
 
-            // Add suffix to all $ref
-            schemaFileContent = updateRefs(schemaFileContent, suffix);
+                // Delete properties id and schema
+                schemaFileContent = withoutProperty(schemaFileContent, '$id');
+                schemaFileContent = withoutProperty(schemaFileContent, '$schema');
 
-            // Delete properties id and schema
-            schemaFileContent = withoutProperty(schemaFileContent, '$id');
-            schemaFileContent = withoutProperty(schemaFileContent, '$schema');
+                // Get the defs,
+                const updatedDefs = returnProperty(schemaFileContent, '$defs');
+                const updatedDefsWithSuffix: Record<string, any> = {};
 
-            // Get the defs,
-            const updatedDefs = returnProperty(schemaFileContent, '$defs');
-            const updatedDefsWithSuffix: Record<string, any> = {};
-
-            // Update the keys
-            for (const key in updatedDefs) {
-                if (updatedDefs.hasOwnProperty(key)) {
-                    const newKey = key+"_"+suffix;
-                    updatedDefsWithSuffix[newKey] = updatedDefs[key];
+                // Update the keys
+                for (const key in updatedDefs) {
+                    if (updatedDefs.hasOwnProperty(key)) {
+                        const newKey = key + "_" + suffix[position];
+                        updatedDefsWithSuffix[newKey] = updatedDefs[key];
+                    }
                 }
-            }
 
-            // Delete $defs from the actual schema
-            schemaFileContent = withoutProperty(schemaFileContent, '$defs');
+                // Delete $defs from the actual schema
+                schemaFileContent = withoutProperty(schemaFileContent, '$defs');
 
-            // Print out both schemas we have
-             // console.log(`Documento sin defs: ${JSON.stringify(schemaFileContent)}`);
-             // console.log(`Documento con defs: ${JSON.stringify(updatedDefsWithSuffix, null, 2)}`);
-            return [schemaFileContent, updatedDefsWithSuffix];
+                // Print out both schemas we have
+                // console.log(`Documento sin defs: ${JSON.stringify(schemaFileContent)}`);
+                // console.log(`Documento con defs: ${JSON.stringify(updatedDefsWithSuffix, null, 2)}`);
+                return [schemaFileContent, updatedDefsWithSuffix];
+
         }
     }else {
         return '';
@@ -164,7 +169,10 @@ function updateRefs(obj: JSONValue, insertStr: string): JSONValue {
         const newObj: JSONObject = {};
         for (const [key, value] of Object.entries(obj)) {
             if (key === '$ref' && typeof value === 'string') {
-                newObj[key] = modifyRef(value, insertStr);
+                if (!value.includes('http'))
+                    newObj[key] = modifyRef(value, insertStr);
+                else
+                    newObj[key] = obj[key];
             } else {
                 newObj[key] = updateRefs(value, insertStr);
             }
