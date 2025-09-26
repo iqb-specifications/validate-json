@@ -1,16 +1,28 @@
-import Ajv from "ajv";
+import Ajv, { ValidateFunction } from "ajv";
+import fs from "fs";
 
-export type ValidationResult = 'VALID' | 'SCHEMA_NOT_FOUND' | 'SCHEMA_INVALID' | 'SCHEMA_COMPILE_ERROR' | 'INVALID' | 'ERROR_PARSING_SCHEMA' |
-                            'FILE_NOT_FOUND' | 'FILE_PARSE_ERROR' | 'VALIDATION_ERROR';
+export type ValidationResult =
+    'VALID'
+    | 'SCHEMA_NOT_FOUND'
+    | 'SCHEMA_INVALID'
+    | 'SCHEMA_COMPILE_ERROR'
+    | 'INVALID'
+    | 'ERROR_PARSING_SCHEMA'
+    |
+    'FILE_NOT_FOUND'
+    | 'FILE_PARSE_ERROR'
+    | 'VALIDATION_ERROR';
+
 export interface dataObjectWithVersion {
     version: string
 }
+
 export const ValidationErrors = ['INVALID', 'FILE_NOT_FOUND', 'FILE_PARSE_ERROR', 'VALIDATION_ERROR'];
 
-const suffix= [ '_','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+const suffix = ['_', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 let num = 0;
 
-export function hasExternalUri(schemaContent:string):boolean {
+export function hasExternalUri(schemaContent: string): boolean {
     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
 
     // SAFE: Collect all matches using RegExp.exec
@@ -20,11 +32,11 @@ export function hasExternalUri(schemaContent:string):boolean {
     while ((match = refRegex.exec(schemaContent)) !== null) {
         matches.push(match);
     }
-    return (matches.length>0);
+    return (matches.length > 0);
 }
 
-async function findExternalUri(schemaContent: string, num:number): Promise<string> {
-    let recursive= false;
+async function findExternalUri(schemaContent: string, num: number): Promise<string> {
+    let recursive = false;
     let myReturn: ValidationResult = 'VALID';
     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
     let additionalDef: Record<string, string> = {};
@@ -36,31 +48,26 @@ async function findExternalUri(schemaContent: string, num:number): Promise<strin
     while ((match = refRegex.exec(schemaContent)) !== null) {
         matches.push(match);
     }
-    console.log(`La longitud exterior antes es ${matches.length}`)
+
     if (matches.length > 0) {
         // Fetch and prepare replacements
         const fetchPromises = matches.map(async (match) => {
             const urlMatch = match[0].match(/"http[^"]*"/);
-            console.log(`URL match es ${urlMatch}`);
 
             if (!urlMatch) return;
 
             const originalUrl = urlMatch[0].slice(1, -1);
-            console.log(`URL  original  es ${originalUrl}`);
 
             if (!refMap.has(originalUrl)) {
                 num = num + 1;
-                console.log(`Imprimo el numero ${num}`)
                 const [replacement, endDefs] = await fetchRefs(originalUrl, num);
-                console.log(`Soy el replacement ${JSON.stringify(replacement)}`);
-                // check whether it has insider reference, do recursive calls
-                if (hasExternalUri(JSON.stringify(replacement))|| hasExternalUri(JSON.stringify(endDefs))) {
-                  recursive = true;
+
+                // checks we have to call this function again
+                if (hasExternalUri(JSON.stringify(replacement)) || hasExternalUri(JSON.stringify(endDefs))) {
+                    recursive = true;
                 }
 
-                console.log(`La longitud exterior despues es ${matches.length}`)
                 if (replacement !== null) {
-                    console.log(`Imprimo el numero dentro ${num}`);
                     refMap.set(originalUrl, replacement);
                     // Concatenate additional defs at the end of the schema
                     additionalDef = {...additionalDef, ...endDefs};
@@ -78,29 +85,22 @@ async function findExternalUri(schemaContent: string, num:number): Promise<strin
 
             const originalUrl = urlMatch[0].slice(1, -1);
 
-            // console.log(`estoy despues ${JSON.stringify(refMap.get(originalUrl))}`);
-            // Instead of replace, we have to delete id and schema lines and move all defs
             return JSON.stringify(refMap.get(originalUrl)).substring(2, JSON.stringify(refMap.get(originalUrl)).length - 1) ?? match;
         });
-        // console.log(`Schema before: ${schema}`);
 
         // Add additional defs to the schema:
         schema = addToAProperty(JSON.parse(schema), '$defs', JSON.stringify(additionalDef));
-        // console.log(`Additional total defs are: ${JSON.stringify(additionalDef, null, 2)}`);
-        console.log(`Schema111: ${JSON.stringify(schema)}`);
         if (recursive)
             return findExternalUri(JSON.stringify(schema), num);
         else
             return JSON.stringify(schema);
-    }
-else
-    {
+    } else {
         return schemaContent;
     }
 }
 
-export async function fetchRefs(originalUrl: string, position: number): Promise<any>{
-    originalUrl = originalUrl.replace('github','raw.githubusercontent').replace('blob','refs/heads');
+export async function fetchRefs(originalUrl: string, position: number): Promise<any> {
+    originalUrl = originalUrl.replace('github', 'raw.githubusercontent').replace('blob', 'refs/heads');
     let fetchResponse: Response | null;
     let schemaFileContent = {};
     try {
@@ -117,60 +117,60 @@ export async function fetchRefs(originalUrl: string, position: number): Promise<
             schemaFileContent = '';
         }
         if (schemaFileContent) {
-                // Add suffix to all $ref
-                schemaFileContent = updateRefs(schemaFileContent, suffix[position]);
+            // Add suffix to all $ref
+            schemaFileContent = updateRefs(schemaFileContent, suffix[position]);
 
-                // Delete properties id and schema
-                schemaFileContent = withoutProperty(schemaFileContent, '$id');
-                schemaFileContent = withoutProperty(schemaFileContent, '$schema');
+            // Delete properties id and schema
+            schemaFileContent = withoutProperty(schemaFileContent, '$id');
+            schemaFileContent = withoutProperty(schemaFileContent, '$schema');
 
-                // Get the defs,
-                const updatedDefs = returnProperty(schemaFileContent, '$defs');
-                const updatedDefsWithSuffix: Record<string, any> = {};
+            // Get the defs
+            const updatedDefs = returnProperty(schemaFileContent, '$defs');
+            const updatedDefsWithSuffix: Record<string, any> = {};
 
-                // Update the keys
-                for (const key in updatedDefs) {
-                    if (updatedDefs.hasOwnProperty(key)) {
-                        const newKey = key + "_" + suffix[position];
-                        updatedDefsWithSuffix[newKey] = updatedDefs[key];
-                    }
+            // Update the keys
+            for (const key in updatedDefs) {
+                if (updatedDefs.hasOwnProperty(key)) {
+                    const newKey = key + "_" + suffix[position];
+                    updatedDefsWithSuffix[newKey] = updatedDefs[key];
                 }
+            }
 
-                // Delete $defs from the actual schema
-                schemaFileContent = withoutProperty(schemaFileContent, '$defs');
-
-                // Print out both schemas we have
-                // console.log(`Documento sin defs: ${JSON.stringify(schemaFileContent)}`);
-                // console.log(`Documento con defs: ${JSON.stringify(updatedDefsWithSuffix, null, 2)}`);
-                return [schemaFileContent, updatedDefsWithSuffix];
-
+            // Delete $defs from the actual schema
+            schemaFileContent = withoutProperty(schemaFileContent, '$defs');
+            return [schemaFileContent, updatedDefsWithSuffix];
         }
-    }else {
+    } else {
         return '';
     }
 }
 
 // @ts-ignore
-function withoutProperty(obj, property){
-    const { [property]: unused, ...rest } = obj;
+function withoutProperty(obj, property) {
+    const {[property]: unused, ...rest} = obj;
     return rest;
 }
 
 // @ts-ignore
-function returnProperty(obj, property){
-    const { [property]: unused, ...rest } = obj;
+function returnProperty(obj, property) {
+    const {[property]: unused, ...rest} = obj;
     return unused;
 }
 
 // @ts-ignore
-function addToAProperty(obj, property, value){
-    obj[property] = { ...obj[property] , ...JSON.parse(value)};
+function addToAProperty(obj, property, value) {
+    obj[property] = {...obj[property], ...JSON.parse(value)};
     return obj;
 }
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray;
-interface JSONObject { [key: string]: JSONValue; }
-interface JSONArray extends Array<JSONValue> {}
+
+interface JSONObject {
+    [key: string]: JSONValue;
+}
+
+interface JSONArray extends Array<JSONValue> {
+}
 
 /**
  * Recursively traverse the JSON and update all $ref values
@@ -204,12 +204,35 @@ function modifyRef(refPath: string, insertStr: string): string {
     const parts = refPath.split('/');
     if (parts.length > 2) {
         // Insert before the last part (i.e., before "User")
-        parts[parts.length - 1] += "_"+insertStr;
+        parts[parts.length - 1] += "_" + insertStr;
     }
     return parts.join('/');
 }
 
-
+// @ts-ignore
+async function generateNewSchema(fileContent, filename):[ValidationResult, any]{
+    let myReturn: ValidationResult = 'VALID';
+    const fs = require('fs');
+    const ajv = new Ajv();
+    let compiledSchema: ValidateFunction<unknown> | null = null;
+    await Promise.resolve(findExternalUri(fileContent.toString(), num))
+        .then((value) => {
+            const dataObject = JSON.parse(value);
+            console.log(`Mi dataObject es : ${dataObject}`);
+            compiledSchema = ajv.compile(dataObject);
+            fs.writeFile(filename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
+                if (err_write) {
+                    console.log(`Error writing file ${filename}`, err_write);
+                } else {
+                    console.log(`Writing ref_${filename}`);
+                }
+            });
+        }).catch((err) => {
+            myReturn = 'SCHEMA_COMPILE_ERROR';
+            ValidationFactory.lastErrorMessage = err;
+        });
+    return [myReturn, compiledSchema];
+}
 
 export abstract class ValidationFactory {
     public static lastErrorMessage: unknown = null;
@@ -228,41 +251,22 @@ export abstract class ValidationFactory {
                 ValidationFactory.lastErrorMessage = err;
                 fileContent = null;
             }
+            if (hasExternalUri(fileContent)) {
+                [myReturn, compiledSchema] = generateNewSchema(fileContent, schemaFilename);
+                fileContent = fs.readFileSync(schemaFilename, 'utf8');
+            }
             if (fileContent) {
                 const ajv = new Ajv();
-                if (hasExternalUri(fileContent)) {
-                    const refMap = new Map<string, string>();
-                    Promise.resolve(findExternalUri(fileContent.toString(), num))
-                        .then((value) => {
-                            const dataObject = JSON.parse(value);
-                            // console.log(`Schema with external refs: ${JSON.stringify(dataObject, null, 2)}`);
-                            compiledSchema = ajv.compile(dataObject);
-                            ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
-                            // Create a new schema with contains the no external refs
-                            // Instead of write the new file, validate the rest of the schema
-
-                            // @ts-ignore
-                            fs.writeFile(schemaFilename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
-                                if (err_write) {
-                                    console.log(`Error writing file ${schemaFilename}`, err_write);
-                                } else {
-                                    console.log(`Writing ref_${schemaFilename}`);
-                                }
-                            });
-                        }).catch((err) => {
-                        myReturn = 'SCHEMA_COMPILE_ERROR';
-                        ValidationFactory.lastErrorMessage = err;
-                    });
-                }else{
                     try {
                         const dataObject = JSON.parse(fileContent);
+                        console.log(`Mi dataObject es : ${dataObject}`);
                         compiledSchema = ajv.compile(dataObject);
                         ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
                     } catch (err) {
                         myReturn = 'SCHEMA_COMPILE_ERROR';
                         ValidationFactory.lastErrorMessage = err;
                     }
-                }
+
             }
         } else {
             myReturn = 'SCHEMA_NOT_FOUND'
@@ -355,3 +359,4 @@ export abstract class ValidationFactory {
         return myReturn;
     }
 }
+
