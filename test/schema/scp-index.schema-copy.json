@@ -47,6 +47,9 @@
     "metadata": {
       "$ref": "#/$defs/metadata"
     },
+    "scp-analysis": {
+      "$ref": "#/$defs/scp-analysis"
+    },
     "codingParameters": {
       "$ref": "#/$defs/codingParameters"
     },
@@ -772,7 +775,7 @@
       "$ref": "https://w3id.org/iqb/spec/metadata-values/3.0"
     },
     "scp-analysis": {
-      "$ref": "https://w3id.org/iqb/spec/scp-analysis/0.2"
+      "$ref": "https://github.com/nanoyan/metadata-store/blob/main/scp-analysis2.schema.json"
     }
   }
 }

@@ -1,5 +1,4 @@
 import Ajv, { ValidateFunction } from "ajv";
-import fs from "fs";
 
 export type ValidationResult =
     'VALID'
