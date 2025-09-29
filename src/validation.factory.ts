@@ -86,19 +86,18 @@ async function findExternalUri(schemaContent: string, num: number): Promise<stri
 
             return JSON.stringify(refMap.get(originalUrl)).substring(2, JSON.stringify(refMap.get(originalUrl)).length - 1) ?? match;
         });
-
         // Add additional defs to the schema:
         schema = addToAProperty(JSON.parse(schema), '$defs', JSON.stringify(additionalDef));
-        if (recursive)
+        if (recursive) {
             return findExternalUri(JSON.stringify(schema), num);
-        else
+        } else
             return JSON.stringify(schema);
     } else {
         return schemaContent;
     }
 }
 
-export async function fetchRefs(originalUrl: string, position: number): Promise<any> {
+async function fetchRefs(originalUrl: string, position: number): Promise<any> {
     originalUrl = originalUrl.replace('github', 'raw.githubusercontent').replace('blob', 'refs/heads');
     let fetchResponse: Response | null;
     let schemaFileContent = {};
@@ -143,6 +142,8 @@ export async function fetchRefs(originalUrl: string, position: number): Promise<
         return '';
     }
 }
+
+export default fetchRefs
 
 // @ts-ignore
 function withoutProperty(obj, property) {
@@ -217,8 +218,8 @@ async function generateNewSchema(fileContent, filename):[ValidationResult, any]{
     await Promise.resolve(findExternalUri(fileContent.toString(), num))
         .then((value) => {
             const dataObject = JSON.parse(value);
-            console.log(`Mi dataObject es : ${dataObject}`);
             compiledSchema = ajv.compile(dataObject);
+
             fs.writeFile(filename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
                 if (err_write) {
                     console.log(`Error writing file ${filename}`, err_write);
@@ -258,7 +259,6 @@ export abstract class ValidationFactory {
                 const ajv = new Ajv();
                     try {
                         const dataObject = JSON.parse(fileContent);
-                        console.log(`Mi dataObject es : ${dataObject}`);
                         compiledSchema = ajv.compile(dataObject);
                         ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
                     } catch (err) {
