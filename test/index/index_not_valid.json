@@ -17,8 +17,10 @@
   "maintainerUrl": "https://www.iqb.hu-berlin.de/tba",
   "status": "RELEASED_CONFIDENTIAL",
   "metadata": {
+    "profileId": "https://raw.githubusercontent.com/iqb-vocabs/p44/master/index.json",
     "entries": [
       {
+        "id": "e1",
         "label": [
           {
             "lang": "de",
@@ -59,342 +61,272 @@
       }
     ]
   },
-  "scp-analysis": {
-    "$id": "scp-analysis@0.2",
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Survey output analysis",
-    "description": "Specification for processing survey output.",
-    "type": "object",
-    "properties": {
-      "id": {
-        "description": "Identifier to handle different analysis definitions.",
-        "type": "string"
+  "codingParameters": {
+    "statusMapping": [
+      {
+        "itemValueType": "MISSING",
+        "status": [
+          "UNSET",
+          "NOT_REACHED",
+          "DISPLAYED",
+          "VALUE_CHANGED",
+          "DERIVE_ERROR"
+        ]
       },
-      "name": {
-        "$ref": "#/$defs/languageTaggedText"
-      },
-      "description": {
-        "$ref": "#/$defs/languageTaggedText"
-      },
-      "items": {
-        "description": "Definition of all items from all modules.",
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/item"
-        },
-        "minItems": 1
-      },
-      "statusMapping": {
-        "description": "Rules how to translate response status into item value",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "itemValue": {
-              "type": "integer"
-            },
-            "status": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "UNSET",
-                  "NOT_REACHED",
-                  "DISPLAYED",
-                  "VALUE_CHANGED",
-                  "DERIVE_ERROR",
-                  "NO_CODING",
-                  "INVALID",
-                  "CODING_INCOMPLETE",
-                  "CODING_ERROR",
-                  "PARTLY_DISPLAYED",
-                  "DERIVE_PENDING",
-                  "INTENDED_INCOMPLETE",
-                  "CODE_SELECTION_PENDING"
-                ]
-              },
-              "minItems": 1
-            }
-          },
-          "required": [
-            "itemValue",
-            "status"
-          ],
-          "additionalProperties": false
-        }
-      },
-      "itemScales": {
-        "description": "Scales based directly on item values, providing one numeric value per test taker",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "description": "Identifier referred by other scales and survey output.",
-              "type": "string"
-            },
-            "name": {
-              "$ref": "#/$defs/languageTaggedText"
-            },
-            "description": {
-              "$ref": "#/$defs/languageTaggedText"
-            },
-            "method": {
-              "description": "Way how to process the item values.",
-              "type": "string",
-              "enum": [
-                "SUM",
-                "RATIO",
-                "MEAN",
-                "MEDIAN"
-              ]
-            },
-            "methodParameters": {
-              "description": "Depending on the method, different parameters specify the processing.",
-              "oneOf": [
-                {
-                  "$ref": "#/$defs/methodParametersRatio"
-                }
-              ]
-            },
-            "items": {
-              "description": "List of all items providing it's value to this specific scale",
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "itemId": {
-                    "description": "This parameter refers to one entry of the surveyPart item list.",
-                    "type": "string"
-                  },
-                  "weight": {
-                    "description": "Modifies the item value before processing - works as a multiplier.",
-                    "type": "number",
-                    "default": 1
-                  }
-                },
-                "required": [
-                  "itemId"
-                ],
-                "additionalProperties": false
-              },
-              "minItems": 1
-            }
-          },
-          "required": [
-            "id",
-            "name",
-            "method",
-            "items"
-          ],
-          "additionalProperties": false
-        }
-      },
-      "derivedScales": {
-        "description": "Scales based on other scale's value, providing one alphanumeric value per test taker",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "description": "Identifier referred by other scales and survey output.",
-              "type": "string"
-            },
-            "name": {
-              "$ref": "#/$defs/languageTaggedText"
-            },
-            "description": {
-              "$ref": "#/$defs/languageTaggedText"
-            },
-            "source": {
-              "description": "Id of the scale providing the value for this derived scale",
-              "type": "string"
-            },
-            "preProcessing": {
-              "description": "Modifies the value before mapping.",
-              "type": "string",
-              "enum": [
-                "TO_LOWER_CASE",
-                "ROUND_TO_INTEGER"
-              ]
-            },
-            "mappings": {
-              "description": "Applies the method to the value. The first match will go.",
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "method": {
-                    "type": "string",
-                    "description": "Condition for evaluation",
-                    "enum": [
-                      "MATCH",
-                      "MATCH_REGEX",
-                      "LESS_THAN",
-                      "MORE_THAN",
-                      "MAX",
-                      "MIN"
-                    ]
-                  },
-                  "parameters": {
-                    "type": "array",
-                    "description": "Depending on the method, additional parameter(s) is needed.",
-                    "items": {
-                      "type": "string"
-                    },
-                    "minItems": 1
-                  },
-                  "newValue": {
-                    "description": "Value as outcome of this scale",
-                    "type": "string"
-                  },
-                  "valueLabel": {
-                    "$ref": "#/$defs/languageTaggedText"
-                  },
-                  "valueDescription": {
-                    "$ref": "#/$defs/languageTaggedText"
-                  }
-                },
-                "required": [
-                  "method",
-                  "parameters",
-                  "newValue"
-                ],
-                "additionalProperties": false
-              },
-              "minItems": 1
-            },
-            "elseValue": {
-              "description": "Value if no mapping matches",
-              "type": "string",
-              "default": "0"
-            },
-            "elseValueLabel": {
-              "$ref": "#/$defs/languageTaggedText"
-            },
-            "elseValueDescription": {
-              "$ref": "#/$defs/languageTaggedText"
-            }
-          },
-          "required": [
-            "id",
-            "name",
-            "source",
-            "mappings"
-          ],
-          "additionalProperties": false
-        }
+      {
+        "itemValueType": "FULL_CREDIT",
+        "status": [
+          "NO_CODING",
+          "INVALID",
+          "CODING_INCOMPLETE",
+          "CODING_ERROR",
+          "PARTLY_DISPLAYED",
+          "DERIVE_PENDING",
+          "INTENDED_INCOMPLETE",
+          "CODE_SELECTION_PENDING"
+        ]
       }
-    },
-    "required": [
-      "id",
-      "items"
     ],
-    "additionalProperties": false,
-    "$defs": {
-      "languageTaggedText": {
-        "description": "Language tagged text",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "lang": {
-              "description": "ISO-language code",
-              "type": "string",
-              "minLength": 1,
-              "pattern": "^[a-z]{2}$"
-            },
-            "value": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "lang",
-            "value"
-          ],
-          "additionalProperties": false
-        },
-        "minItems": 1
-      },
-      "metadata": {
-        "$ref": "https://w3id.org/iqb/spec/metadata-values/3.0"
-      },
-      "item": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "description": "Identifier used in all other definitions of this document",
-            "type": "string"
-          },
-          "name": {
-            "$ref": "#/$defs/languageTaggedText"
-          },
-          "sources": {
-            "description": "This item will get its value from various sources throughout the survey",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "moduleId": {
-                  "description": "Refers to the module used by an instrument of the surveyPart",
-                  "type": "string"
-                },
-                "unitId": {
-                  "description": "Refers to the unit data (UI definition, coding scheme, metadata etc.)",
-                  "type": "string"
-                },
-                "unitAlias": {
-                  "description": "Refers to the unit id used in response data",
-                  "type": "string"
-                },
-                "sourceVariable": {
-                  "description": "Refers to the variable providing its score as item value",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "moduleId",
-                "unitId",
-                "sourceVariable"
-              ],
-              "additionalProperties": false
-            },
-            "minItems": 1
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "sources"
-        ],
-        "additionalProperties": false
-      },
-      "methodParametersRatio": {
-        "description": "Parameters for the processing method RATIO.",
-        "type": "object",
-        "properties": {
-          "maxValue": {
-            "description": "If methodParameters is not given, the number of items will be taken as maxValue",
-            "type": "number"
-          }
-        },
-        "required": [
-          "maxValue"
-        ],
-        "additionalProperties": false
-      }
-    }
+    "minItemsPercent": 60
   },
-
-
-
-
-
-
-
-
-
-
+  "scp-analysis":{
+    "id": "IQBSCP-A-923",
+    "name": [
+      {
+        "lang": "de",
+        "value": "Analyse-Schema für VERA2027-Französisch"
+      }
+    ],
+    "description": [
+      {
+        "lang": "de",
+        "value": "Dieses Analyse-Schema deckt alle Testhefte ab, die Französisch-Kompetenzen erheben."
+      }
+    ],
+    "items": [
+      {
+        "id": "F9283a",
+        "name": [
+          {
+            "lang": "de",
+            "value": "Teilaufgabe A"
+          }
+        ],
+        "sources": [
+          {
+            "moduleId": "F4",
+            "unitId": "F9283",
+            "sourceVariable": "a3"
+          },
+          {
+            "moduleId": "F6",
+            "unitId": "F9283",
+            "unitAlias": "F9283_2",
+            "sourceVariable": "a3"
+          }
+        ]
+      },
+      {
+        "id": "F9283b",
+        "name": [
+          {
+            "lang": "de",
+            "value": "Teilaufgabe B"
+          }
+        ],
+        "sources": [
+          {
+            "moduleId": "F4",
+            "unitId": "F9283",
+            "sourceVariable": "b"
+          },
+          {
+            "moduleId": "F6",
+            "unitId": "F9283",
+            "unitAlias": "F9283_2",
+            "sourceVariable": "b"
+          }
+        ]
+      },
+      {
+        "id": "F9283c",
+        "name": [
+          {
+            "lang": "de",
+            "value": "Teilaufgabe C"
+          }
+        ],
+        "sources": [
+          {
+            "moduleId": "F4",
+            "unitId": "F9283",
+            "sourceVariable": "c_3"
+          },
+          {
+            "moduleId": "F6",
+            "unitId": "F9283",
+            "unitAlias": "F9283_2",
+            "sourceVariable": "c_3"
+          }
+        ]
+      }
+    ],
+    "statusMapping": [
+      {
+        "itemValue": -99,
+        "status": [
+          "UNSET",
+          "NOT_REACHED",
+          "DISPLAYED",
+          "VALUE_CHANGED",
+          "DERIVE_ERROR"
+        ]
+      },
+      {
+        "itemValue": 0,
+        "status": [
+          "NO_CODING",
+          "INVALID",
+          "CODING_INCOMPLETE",
+          "CODING_ERROR",
+          "PARTLY_DISPLAYED",
+          "DERIVE_PENDING",
+          "INTENDED_INCOMPLETE",
+          "CODE_SELECTION_PENDING"
+        ]
+      }
+    ],
+    "itemScales": [
+      {
+        "id": "IQB.FCSum",
+        "name": [
+          {
+            "lang": "de",
+            "value": "Summe aller Items für Französisch Lesen"
+          },
+          {
+            "lang": "en",
+            "value": "Full credit sum for all items for reading comprehension french language"
+          }
+        ],
+        "method": "SUM",
+        "items": [
+          {
+            "itemId": "F9283a"
+          },
+          {
+            "itemId": "F9283b",
+            "weight": 2
+          },
+          {
+            "itemId": "F9283c"
+          }
+        ]
+      },
+      {
+        "id": "IQB.FCRatio",
+        "name": [
+          {
+            "lang": "de",
+            "value": "Lösungshäufigkeit Französisch Lesen"
+          },
+          {
+            "lang": "en",
+            "value": "Full credit ratio for reading comprehension french language"
+          }
+        ],
+        "method": "RATIO",
+        "methodParameters": {
+          "maxValue": 15
+        },
+        "items": [
+          {
+            "itemId": "F9283a"
+          },
+          {
+            "itemId": "F9283b",
+            "weight": 2
+          },
+          {
+            "itemId": "F9283c"
+          }
+        ]
+      }
+    ],
+    "derivedScales": [
+      {
+        "id": "IQB.Komp.GER",
+        "name": [
+          {
+            "lang": "de",
+            "value": "Lesen Französisch GER"
+          }
+        ],
+        "description": [
+          {
+            "lang": "de",
+            "value": "Lesekompetenz Französisch in den Stufen des Gemeinsamen Europäischen Referenzrahmens für Sprachen"
+          }
+        ],
+        "source": "IQB.FCRatio",
+        "preProcessing": "ROUND_TO_INTEGER",
+        "mappings": [
+          {
+            "method": "LESS_THAN",
+            "parameters": [
+              "30"
+            ],
+            "newValue": "A1",
+            "valueLabel": [
+              {
+                "lang": "de",
+                "value": "Stufe A1"
+              }
+            ],
+            "valueDescription": [
+              {
+                "lang": "de",
+                "value": "Kann sehr kurze, einfache Texte Satz für Satz lesen und verstehen, indem er/sie bekannte Namen, Wörter und einfachste Wendungen heraussucht und, wenn nötig, den Text mehrmals liest."
+              }
+            ]
+          },
+          {
+            "method": "LESS_THAN",
+            "parameters": [
+              "60"
+            ],
+            "newValue": "B1",
+            "valueLabel": [
+              {
+                "lang": "de",
+                "value": "Stufe B1"
+              }
+            ]
+          },
+          {
+            "method": "LESS_THAN",
+            "parameters": [
+              "80"
+            ],
+            "newValue": "C1",
+            "valueLabel": [
+              {
+                "lang": "de",
+                "value": "Stufe C1"
+              }
+            ]
+          }
+        ],
+        "elseValue": "C2",
+        "elseValueLabel": [
+          {
+            "lang": "de",
+            "value": "Stufe C2"
+          }
+        ]
+      }
+    ]
+  },
   "surveyParts": [
     {
       "id": "1",
@@ -744,7 +676,7 @@
               "value": "Mathematik Testheft Grundkurs"
             }
           ],
-          "testcenterBooklets": [
+          "testcenterBooklet": [
             {
               "lang": "de",
               "definitionId": "math/booklets/ma-th1.xml",
@@ -769,7 +701,7 @@
               "value": "Mathematik Testheft Ergänzungskurs"
             }
           ],
-          "testcenterBooklets": [
+          "testcenterBooklet": [
             {
               "lang": "de",
               "definitionId": "math/booklets/ma-th2.xml",
@@ -781,6 +713,209 @@
                 {
                   "moduleId": "ME2",
                   "order": 2
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "id": "F9283a",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Teilaufgabe A"
+            }
+          ],
+          "sources": [
+            {
+              "moduleId": "F4",
+              "unitId": "F9283",
+              "sourceVariable": "a3"
+            },
+            {
+              "moduleId": "F6",
+              "unitId": "F9283",
+              "unitAlias": "F9283_2",
+              "sourceVariable": "a3"
+            }
+          ]
+        },
+        {
+          "id": "F9283b",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Teilaufgabe B"
+            }
+          ],
+          "sources": [
+            {
+              "moduleId": "F4",
+              "unitId": "F9283",
+              "sourceVariable": "b"
+            },
+            {
+              "moduleId": "F6",
+              "unitId": "F9283",
+              "unitAlias": "F9283_2",
+              "sourceVariable": "b"
+            }
+          ]
+        },
+        {
+          "id": "F9283c",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Teilaufgabe C"
+            }
+          ],
+          "sources": [
+            {
+              "moduleId": "F4",
+              "unitId": "F9283",
+              "sourceVariable": "c_3"
+            },
+            {
+              "moduleId": "F6",
+              "unitId": "F9283",
+              "unitAlias": "F9283_2",
+              "sourceVariable": "c_3"
+            }
+          ]
+        }
+      ],
+      "baseScales": [
+        {
+          "id": "IQB.FCSum",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Summe aller Items für Französisch Lesen"
+            },
+            {
+              "lang": "en",
+              "value": "Full credit sum for all items for reading comprehension french language"
+            }
+          ],
+          "method": "SUM",
+          "items": [
+            "F9283a",
+            "F9283b",
+            "F9283c"
+          ]
+        },
+        {
+          "id": "IQB.FCRatio",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Lösungshäufigkeit Französisch Lesen"
+            },
+            {
+              "lang": "en",
+              "value": "Full credit ratio for reading comprehension french language"
+            }
+          ],
+          "method": "RATIO",
+          "methodParameters": {
+            "maxValue": 15
+          },
+          "items": [
+            "F9283a",
+            "F9283b",
+            "F9283c"
+          ]
+        }
+      ],
+      "derivedScales": [
+        {
+          "id": "IQB.Komp.GER",
+          "name": [
+            {
+              "lang": "de",
+              "value": "Lesen Französisch GER"
+            }
+          ],
+          "description": [
+            {
+              "lang": "de",
+              "value": "Lesekompetenz Französisch in den Stufen des Gemeinsamen Europäischen Referenzrahmens für Sprachen"
+            }
+          ],
+          "source": "IQB.FCRatio",
+          "mappings": [
+            {
+              "method": "LESS_THAN",
+              "parameters": [
+                "30"
+              ],
+              "newValue": 1,
+              "valueLabel": [
+                {
+                  "lang": "de",
+                  "value": "Stufe A1"
+                }
+              ],
+              "valueDescription": [
+                {
+                  "lang": "de",
+                  "value": "Kann sehr kurze, einfache Texte Satz für Satz lesen und verstehen, indem er/sie bekannte Namen, Wörter und einfachste Wendungen heraussucht und, wenn nötig, den Text mehrmals liest."
+                }
+              ]
+            },
+            {
+              "method": "LESS_THAN",
+              "parameters": [
+                "60"
+              ],
+              "newValue": 2,
+              "valueLabel": [
+                {
+                  "lang": "de",
+                  "value": "Stufe B1"
+                }
+              ]
+            },
+            {
+              "method": "LESS_THAN",
+              "parameters": [
+                "80"
+              ],
+              "newValue": 3,
+              "valueLabel": [
+                {
+                  "lang": "de",
+                  "value": "Stufe C1"
+                }
+              ]
+            }
+          ],
+          "elseValue": 5,
+          "elseValueLabel": [
+            {
+              "lang": "de",
+              "value": "Stufe C2"
+            }
+          ],
+          "relatedVocabularies": [
+            {
+              "url": "https://w3id.org/iqb/v10/a1/",
+              "name": "Kompetenzstufenmodell Mathematik Sek 1",
+              "values": [
+                {
+                  "value": 1,
+                  "url": "https://w3id.org/iqb/v10/a1/f3q"
+                },
+                {
+                  "value": 2,
+                  "url": "https://w3id.org/iqb/v10/a1/v9q"
+                },
+                {
+                  "value": 3,
+                  "url": "https://w3id.org/iqb/v10/a1/r5c"
                 }
               ]
             }

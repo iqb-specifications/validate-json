@@ -701,25 +701,8 @@
       }
     ],
     "metadata": {
-      "order": 0,
-      "entries": [
-        {
-          "id": "A",
-          "value": {
-            "raw": "1.03",
-            "asText": [
-              {
-                "lang": "de",
-                "value": "1,03"
-              },
-              {
-                "lang": "en",
-                "value": "1.03"
-              }
-            ]
-          }
-        }
-      ]
+      "profileId": "https://jajaj.sososo",
+      "order": 0
     },
     "items": [
       {

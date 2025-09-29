@@ -6,6 +6,7 @@
   "scripts": {
     "test_validation_1": "ts-node src/validate-json.ts test/nemo stars-unit-definition",
     "test_validation_2": "ts-node src/validate-json.ts test/response response 1.5",
+    "test_analysis": "ts-node src/test-schema.ts test/scp-analysis test/schema/scp-analysis.schema.json",
     "test_schema_check": "ts-node src/test-schema.ts test/schema/test-data test/schema/test.schema.json",
     "test_ref": "ts-node src/test-schema.ts test/index test/schema/scp-index.schema.json",
     "test-ref-2-level-ref": "ts-node src/test-schema.ts test/example test/schema/scp-index.schema.json",
