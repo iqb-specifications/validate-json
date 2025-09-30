@@ -1,4 +1,4 @@
-import Ajv, { ValidateFunction } from "ajv";
+import Ajv from "ajv";
 
 export type ValidationResult =
     'VALID'
@@ -143,7 +143,6 @@ async function fetchRefs(originalUrl: string, position: number): Promise<any> {
     }
 }
 
-export default fetchRefs
 
 // @ts-ignore
 function withoutProperty(obj, property) {
@@ -153,7 +152,7 @@ function withoutProperty(obj, property) {
 
 // @ts-ignore
 function returnProperty(obj, property) {
-    const {[property]: unused, ...rest} = obj;
+    const {[property]: unused } = obj;
     return unused;
 }
 
@@ -209,30 +208,6 @@ function modifyRef(refPath: string, insertStr: string): string {
     return parts.join('/');
 }
 
-// @ts-ignore
-async function generateNewSchema(fileContent, filename):[ValidationResult, any]{
-    let myReturn: ValidationResult = 'VALID';
-    const fs = require('fs');
-    const ajv = new Ajv();
-    let compiledSchema: ValidateFunction<unknown> | null = null;
-    await Promise.resolve(findExternalUri(fileContent.toString(), num))
-        .then((value) => {
-            const dataObject = JSON.parse(value);
-            compiledSchema = ajv.compile(dataObject);
-
-            fs.writeFile(filename, JSON.stringify(dataObject, null, 2), (err_write: Error) => {
-                if (err_write) {
-                    console.log(`Error writing file ${filename}`, err_write);
-                } else {
-                    console.log(`Writing ref_${filename}`);
-                }
-            });
-        }).catch((err) => {
-            myReturn = 'SCHEMA_COMPILE_ERROR';
-            ValidationFactory.lastErrorMessage = err;
-        });
-    return [myReturn, compiledSchema];
-}
 
 export abstract class ValidationFactory {
     public static lastErrorMessage: unknown = null;
@@ -251,12 +226,21 @@ export abstract class ValidationFactory {
                 ValidationFactory.lastErrorMessage = err;
                 fileContent = null;
             }
-            if (hasExternalUri(fileContent)) {
-                [myReturn, compiledSchema] = generateNewSchema(fileContent, schemaFilename);
-                fileContent = fs.readFileSync(schemaFilename, 'utf8');
+            const ajv = new Ajv();
+            if (hasExternalUri(fileContent) && fileContent) {
+                Promise.resolve(findExternalUri(fileContent.toString(), num))
+                    .then(async (value) => {
+                try {
+                    const dataObject = JSON.parse(value);
+                    compiledSchema = ajv.compile(dataObject);
+                    ValidationFactory.compiledSchemas[`${schemaId}@${schemaVersion}`] = compiledSchema;
+                } catch (err) {
+                    myReturn = 'SCHEMA_COMPILE_ERROR';
+                    ValidationFactory.lastErrorMessage = err;
+                }
+                });
             }
-            if (fileContent) {
-                const ajv = new Ajv();
+            else if (fileContent){
                     try {
                         const dataObject = JSON.parse(fileContent);
                         compiledSchema = ajv.compile(dataObject);
@@ -265,11 +249,11 @@ export abstract class ValidationFactory {
                         myReturn = 'SCHEMA_COMPILE_ERROR';
                         ValidationFactory.lastErrorMessage = err;
                     }
-
             }
         } else {
             myReturn = 'SCHEMA_NOT_FOUND'
         }
+
         return myReturn;
     }
 

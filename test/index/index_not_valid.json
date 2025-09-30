@@ -17,49 +17,7 @@
   "maintainerUrl": "https://www.iqb.hu-berlin.de/tba",
   "status": "RELEASED_CONFIDENTIAL",
   "metadata": {
-    "profileId": "https://raw.githubusercontent.com/iqb-vocabs/p44/master/index.json",
-    "entries": [
-      {
-        "id": "e1",
-        "label": [
-          {
-            "lang": "de",
-            "value": "Art der Erhebung"
-          }
-        ],
-        "value": [
-          {
-            "id": "https://w3id.org/iqb/v85/dt/1"
-          }
-        ],
-        "valueAsText": [
-          {
-            "lang": "de",
-            "value": "Kompetenz- und Leistungsdaten"
-          }
-        ]
-      },
-      {
-        "id": "kim_type_school",
-        "label": [
-          {
-            "lang": "de",
-            "value": "Schulform"
-          }
-        ],
-        "value": [
-          {
-            "id": "https://w3id.org/kim/schularten/s02"
-          }
-        ],
-        "valueAsText": [
-          {
-            "lang": "de",
-            "value": "Grundschule"
-          }
-        ]
-      }
-    ]
+    "profileId": "https://raw.githubusercontent.com/iqb-vocabs/p44/master/index.json"
   },
   "codingParameters": {
     "statusMapping": [

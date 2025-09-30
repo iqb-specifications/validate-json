@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { ValidationFactory, ValidationErrors } from "./validation.factory";
+import {ValidationFactory, ValidationErrors, ValidationResult} from "./validation.factory";
 
 let dataFolder = process.argv[2];
 let schemaFileName = process.argv[3];
@@ -42,8 +42,15 @@ if (!schemaFileName) {
     }
 }
 
-if (fs.existsSync(dataFolder) && fs.existsSync(schemaFileName)) {
-    const addSchemaResult = ValidationFactory.addLocalSchema(schemaFileName, schemaId, schemaVersion);
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function step1():Promise<ValidationResult> {
+    const addSchemaResult = await ValidationFactory.addLocalSchema(schemaFileName, schemaId, schemaVersion);
+    await delay(1000);
+    return addSchemaResult;
+}
+
+async function step2 (addSchemaResult : ValidationResult) {
     if (addSchemaResult === 'VALID') {
         console.error(`${schemaFileName}: \x1b[0;32m${addSchemaResult}\x1b[0m`);
         evaluateFolder(dataFolder).then(()=> {
@@ -63,6 +70,17 @@ if (fs.existsSync(dataFolder) && fs.existsSync(schemaFileName)) {
         }
         console.log(ValidationFactory.lastErrorMessage);
     }
+}
+
+if (fs.existsSync(dataFolder) && fs.existsSync(schemaFileName)) {
+    (async() => {
+        // Step 1
+        const addSchemaResult= await step1()
+
+        // Step 2
+        await step2(addSchemaResult);
+
+    })();
 } else {
     console.log(`\x1b[0;31mERROR\x1b[0m data folder '${dataFolder}' or schema file '${schemaFileName}' not found`);
     process.exitCode = 1;
