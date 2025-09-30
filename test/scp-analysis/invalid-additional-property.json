@@ -1,0 +1,271 @@
+{
+  "id": "IQBSCP-A-923",
+  "name": [
+    {
+      "lang": "de",
+      "value": "Analyse-Schema für VERA2027-Französisch"
+    }
+  ],
+  "description": [
+    {
+      "lang": "de",
+      "value": "Dieses Analyse-Schema deckt alle Testhefte ab, die Französisch-Kompetenzen erheben."
+    }
+  ],
+  "new-property": "new-property",
+  "metadata": {
+    "profileId": "https://jajaj.sososo",
+    "order": 0,
+    "entries": [
+      {
+        "id": "idi",
+        "label": [
+          {
+            "lang": "de",
+            "value": "Wortanzahl"
+          }
+        ],
+        "value": [
+          {
+            "id": "kkkk",
+            "label": [
+              {
+                "lang": "de",
+                "value": "jaja"
+              }
+            ],
+            "annotation": [
+              {
+                "lang": "de",
+                "value": "annotation jaja"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "F9283a",
+      "name": [
+        {
+          "lang": "de",
+          "value": "Teilaufgabe A"
+        }
+      ],
+      "sources": [
+        {
+          "moduleId": "F4",
+          "unitId": "F9283",
+          "sourceVariable": "a3"
+        },
+        {
+          "moduleId": "F6",
+          "unitId": "F9283",
+          "unitAlias": "F9283_2",
+          "sourceVariable": "a3"
+        }
+      ]
+    },
+    {
+      "id": "F9283b",
+      "name": [
+        {
+          "lang": "de",
+          "value": "Teilaufgabe B"
+        }
+      ],
+      "sources": [
+        {
+          "moduleId": "F4",
+          "unitId": "F9283",
+          "sourceVariable": "b"
+        },
+        {
+          "moduleId": "F6",
+          "unitId": "F9283",
+          "unitAlias": "F9283_2",
+          "sourceVariable": "b"
+        }
+      ]
+    },
+    {
+      "id": "F9283c",
+      "name": [
+        {
+          "lang": "de",
+          "value": "Teilaufgabe C"
+        }
+      ],
+      "sources": [
+        {
+          "moduleId": "F4",
+          "unitId": "F9283",
+          "sourceVariable": "c_3"
+        },
+        {
+          "moduleId": "F6",
+          "unitId": "F9283",
+          "unitAlias": "F9283_2",
+          "sourceVariable": "c_3"
+        }
+      ]
+    }
+  ],
+  "statusMapping": [
+    {
+      "itemValue": -99,
+      "status": [
+        "UNSET",
+        "NOT_REACHED",
+        "DISPLAYED",
+        "VALUE_CHANGED",
+        "DERIVE_ERROR"
+      ]
+    },
+    {
+      "itemValue": 0,
+      "status": [
+        "NO_CODING",
+        "INVALID",
+        "CODING_INCOMPLETE",
+        "CODING_ERROR",
+        "PARTLY_DISPLAYED",
+        "DERIVE_PENDING",
+        "INTENDED_INCOMPLETE",
+        "CODE_SELECTION_PENDING"
+      ]
+    }
+  ],
+  "itemScales": [
+    {
+      "id": "IQB.FCSum",
+      "name": [
+        {
+          "lang": "de",
+          "value": "Summe aller Items für Französisch Lesen"
+        },
+        {
+          "lang": "en",
+          "value": "Full credit sum for all items for reading comprehension french language"
+        }
+      ],
+      "method": "SUM",
+      "items": [
+        {
+          "itemId": "F9283a"
+        },
+        {
+          "itemId": "F9283b",
+          "weight": 2
+        },
+        {
+          "itemId": "F9283c"
+        }
+      ]
+    },
+    {
+      "id": "IQB.FCRatio",
+      "name": [
+        {
+          "lang": "de",
+          "value": "Lösungshäufigkeit Französisch Lesen"
+        },
+        {
+          "lang": "en",
+          "value": "Full credit ratio for reading comprehension french language"
+        }
+      ],
+      "method": "RATIO",
+      "methodParameters": {
+        "maxValue": 15
+      },
+      "items": [
+        {
+          "itemId": "F9283a"
+        },
+        {
+          "itemId": "F9283b",
+          "weight": 2
+        },
+        {
+          "itemId": "F9283c"
+        }
+      ]
+    }
+  ],
+  "derivedScales": [
+    {
+      "id": "IQB.Komp.GER",
+      "name": [
+        {
+          "lang": "de",
+          "value": "Lesen Französisch GER"
+        }
+      ],
+      "description": [
+        {
+          "lang": "de",
+          "value": "Lesekompetenz Französisch in den Stufen des Gemeinsamen Europäischen Referenzrahmens für Sprachen"
+        }
+      ],
+      "source": "IQB.FCRatio",
+      "preProcessing": "ROUND_TO_INTEGER",
+      "mappings": [
+        {
+          "method": "LESS_THAN",
+          "parameters": [
+            "30"
+          ],
+          "newValue": "A1",
+          "valueLabel": [
+            {
+              "lang": "de",
+              "value": "Stufe A1"
+            }
+          ],
+          "valueDescription": [
+            {
+              "lang": "de",
+              "value": "Kann sehr kurze, einfache Texte Satz für Satz lesen und verstehen, indem er/sie bekannte Namen, Wörter und einfachste Wendungen heraussucht und, wenn nötig, den Text mehrmals liest."
+            }
+          ]
+        },
+        {
+          "method": "LESS_THAN",
+          "parameters": [
+            "60"
+          ],
+          "newValue": "B1",
+          "valueLabel": [
+            {
+              "lang": "de",
+              "value": "Stufe B1"
+            }
+          ]
+        },
+        {
+          "method": "LESS_THAN",
+          "parameters": [
+            "80"
+          ],
+          "newValue": "C1",
+          "valueLabel": [
+            {
+              "lang": "de",
+              "value": "Stufe C1"
+            }
+          ]
+        }
+      ],
+      "elseValue": "C2",
+      "elseValueLabel": [
+        {
+          "lang": "de",
+          "value": "Stufe C2"
+        }
+      ]
+    }
+  ]
+}

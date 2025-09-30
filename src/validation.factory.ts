@@ -36,11 +36,10 @@ export function hasExternalUri(schemaContent: string): boolean {
 
 async function findExternalUri(schemaContent: string, num: number): Promise<string> {
     let recursive = false;
-    let myReturn: ValidationResult = 'VALID';
     const refRegex: RegExp = /\$ref"\s*:\s*"http[^"]*"/g;
     let additionalDef: Record<string, string> = {};
     const refMap = new Map<string, string>();
-    // SAFE: Collect all matches using RegExp.exec
+
     const matches: RegExpMatchArray[] = [];
     let match: RegExpExecArray | null;
 
@@ -61,7 +60,6 @@ async function findExternalUri(schemaContent: string, num: number): Promise<stri
                 num = num + 1;
                 const [replacement, endDefs] = await fetchRefs(originalUrl, num);
 
-                // checks we have to call this function again
                 if (hasExternalUri(JSON.stringify(replacement)) || hasExternalUri(JSON.stringify(endDefs))) {
                     recursive = true;
                 }
@@ -71,7 +69,6 @@ async function findExternalUri(schemaContent: string, num: number): Promise<stri
                     // Concatenate additional defs at the end of the schema
                     additionalDef = {...additionalDef, ...endDefs};
                 } else {
-                    myReturn = 'SCHEMA_NOT_FOUND';
                     refMap.set(originalUrl, match[0]);
                 }
             }
@@ -173,7 +170,7 @@ interface JSONArray extends Array<JSONValue> {
 
 /**
  * Recursively traverse the JSON and update all $ref values
- * by inserting a string into the middle of the path.
+ * by inserting a string at the end of the path.
  */
 function updateRefs(obj: JSONValue, insertStr: string): JSONValue {
     if (Array.isArray(obj)) {
@@ -196,8 +193,8 @@ function updateRefs(obj: JSONValue, insertStr: string): JSONValue {
 }
 
 /**
- * Insert a string into the middle of a $ref path.
- * For example: "#/components/schemas/User" → "#/components/schemas/UserX"
+ * Insert a string in the end of a $ref path.
+ * For example: "#/components/schemas/User" → "#/components/schemas/User_A"
  */
 function modifyRef(refPath: string, insertStr: string): string {
     const parts = refPath.split('/');
@@ -217,6 +214,8 @@ export abstract class ValidationFactory {
     public static addLocalSchema(schemaFilename: string, schemaId: string, schemaVersion: string): ValidationResult{
         let myReturn: ValidationResult = 'VALID';
         const fs = require('fs');
+        const ajv = new Ajv();
+
         if (fs.existsSync(schemaFilename)) {
             let compiledSchema = null;
             let fileContent;
@@ -226,7 +225,7 @@ export abstract class ValidationFactory {
                 ValidationFactory.lastErrorMessage = err;
                 fileContent = null;
             }
-            const ajv = new Ajv();
+
             if (hasExternalUri(fileContent) && fileContent) {
                 Promise.resolve(findExternalUri(fileContent.toString(), num))
                     .then(async (value) => {
