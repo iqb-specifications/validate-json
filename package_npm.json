@@ -1,6 +1,6 @@
 {
   "name": "@iqbspecs/validate-json",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "author": "IQB - Institut zur Qualitätsentwicklung im Bildungswesen",
   "license": "MIT",
   "description": "Script to validate json data based on a json schema published in iqb-specifications",
@@ -13,7 +13,8 @@
   },
   "homepage": "https://github.com/iqb-specifications/validate-json#readme",
   "dependencies": {
-    "ajv": "^8.12.0"
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1"
   },
   "bin": {
     "validate-json": "./validate-json.js",

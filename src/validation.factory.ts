@@ -1,4 +1,5 @@
 import Ajv from "ajv";
+import addFormats from "ajv-formats";
 
 export type ValidationResult = 'VALID' | 'SCHEMA_NOT_FOUND' | 'SCHEMA_INVALID' | 'SCHEMA_COMPILE_ERROR' | 'INVALID' | 'ERROR_PARSING_SCHEMA' |
                             'FILE_NOT_FOUND' | 'FILE_PARSE_ERROR' | 'VALIDATION_ERROR';
@@ -26,6 +27,7 @@ export abstract class ValidationFactory {
             }
             if (fileContent) {
                 const ajv = new Ajv();
+                addFormats(ajv);
                 try {
                     const dataObject = JSON.parse(fileContent);
                     compiledSchema = ajv.compile(dataObject);

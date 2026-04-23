@@ -12,7 +12,7 @@ Or add manually to the `package.json` and run `npm install`:
 
 ```json
     "devDependencies": {
-      "@iqbspecs/validate-json": "^0.1.0"
+      "@iqbspecs/validate-json": "^1.0.0"
     }
 ```
 Sure the version of the package will change...
